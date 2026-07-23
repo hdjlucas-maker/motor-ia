@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Trash2, HelpCircle, ChevronDown, ChevronUp, Search, Car, Bike, Wallet, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { useUser } from '../../context/UserContext';
 import { processQuery } from '../../ai/assistant';
 import { MAINTENANCE_FAQ_CATEGORIES, FAQ_ITEMS, searchFAQ } from '../../ai/knowledgeBase';
 import './AI.css';
@@ -44,6 +45,7 @@ const FormattedText = ({ content }) => {
 
 const AI = () => {
   const { transactions } = useFinance();
+  const { vehicleProfile } = useUser();
 
   // Histórico de mensagens do localStorage ou mensagem padrão
   const [messages, setMessages] = useState(() => {
@@ -68,7 +70,7 @@ const AI = () => {
   const chatEndRef = useRef(null);
 
   // Telemetria da Garagem
-  const currentKm = Number(localStorage.getItem('motorIA_currentKm')) || 85000;
+  const currentKm = vehicleProfile?.currentKm || Number(localStorage.getItem('motorIA_currentKm')) || 85000;
   const maintenances = (() => {
     const saved = localStorage.getItem('motorIA_maintenances');
     return saved ? JSON.parse(saved) : [];
@@ -113,7 +115,8 @@ const AI = () => {
         userQuery: query,
         transactions,
         currentKm,
-        maintenances
+        maintenances,
+        vehicleProfile
       });
 
       const aiReply = {

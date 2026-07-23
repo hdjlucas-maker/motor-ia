@@ -1,25 +1,62 @@
 import React from 'react';
-import { TrendingUp, Car, MapPin, Clock, AlertCircle } from 'lucide-react';
+import { TrendingUp, Car, Bike, MapPin, Clock, AlertCircle, Settings, CheckCircle2 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { useUser } from '../../context/UserContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { getTodayMetrics } = useFinance();
+  const { user, vehicleProfile, setShowVehicleModal } = useUser();
   const metrics = getTodayMetrics();
   
+  const isMoto = vehicleProfile?.type === 'moto';
   const formatCurrency = (val) => `R$ ${val.toFixed(2).replace('.', ',')}`;
+
   return (
     <div className="dashboard-container">
-      {/* AI Smart Alert */}
+      {/* Card de Boas-Vindas & Veículo */}
+      <div className="driver-profile-card glass-panel">
+        <div className="driver-avatar-flex">
+          <img 
+            src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
+            alt="Avatar Motorista" 
+            className="driver-avatar"
+          />
+          <div>
+            <div className="driver-name-badge">
+              <h3>{user?.name || 'Motorista Parceiro'}</h3>
+              <span className="online-pill"><CheckCircle2 size={12} /> Online</span>
+            </div>
+            <p className="driver-email">{user?.email || 'motorista@gmail.com'}</p>
+          </div>
+        </div>
+
+        <div className="driver-vehicle-info" onClick={() => setShowVehicleModal(true)}>
+          <div className="vehicle-icon-box">
+            {isMoto ? <Bike size={22} className="icon-gold" /> : <Car size={22} className="icon-blue" />}
+          </div>
+          <div className="vehicle-details">
+            <span className="v-title">{vehicleProfile?.brand} {vehicleProfile?.model} ({vehicleProfile?.year})</span>
+            <span className="v-km">Odômetro: {(vehicleProfile?.currentKm || 85000).toLocaleString('pt-BR')} KM • {vehicleProfile?.fuelType}</span>
+          </div>
+          <Settings size={18} className="v-edit-icon" />
+        </div>
+      </div>
+
+      {/* Alerta Inteligente da IA */}
       <div className="ai-alert-card glass-panel">
         <div className="ai-header">
           <AlertCircle size={20} className="ai-icon" />
-          <h3>Dica da IA</h3>
+          <h3>Dica da Motor IA para seu {vehicleProfile?.model || 'Veículo'}</h3>
         </div>
-        <p>Você trabalhou 310 km hoje. Pela quilometragem, faltam cerca de 1.200 km para a próxima troca de óleo. Se guardar R$ 25 por dia, terá o valor da revisão.</p>
+        <p>
+          {isMoto 
+            ? `Com a sua ${vehicleProfile?.model || 'Moto'}, lembre-se de lubrificar a corrente a cada 500 KM e conferir a folga. Guarde R$ 0,10 por KM para trocas de pneu e óleo!` 
+            : `Para o seu ${vehicleProfile?.model || 'Carro'}, faça a calibragem semanal dos pneus com ele frio. Separe R$ 0,25 por KM rodado para a caixinha de revisão!`}
+        </p>
       </div>
 
-      {/* Main Financial Overview */}
+      {/* Visão Financeira Principal */}
       <section className="financial-overview">
         <div className="balance-card">
           <span className="label">Lucro Líquido Real (Hoje)</span>
@@ -48,36 +85,36 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* Daily Metrics */}
+      {/* Métricas do Dia */}
       <section className="metrics-section">
         <h3>Métricas de Hoje</h3>
         <div className="metrics-grid">
           <div className="metric-item glass-panel">
             <Clock size={20} className="metric-icon" />
             <div className="metric-info">
-              <span className="m-label">Horas</span>
-              <span className="m-value">6h 30m</span>
+              <span className="m-label">Categoria</span>
+              <span className="m-value">{vehicleProfile?.category || 'Uber / 99'}</span>
             </div>
           </div>
           <div className="metric-item glass-panel">
             <MapPin size={20} className="metric-icon" />
             <div className="metric-info">
-              <span className="m-label">Rodado</span>
-              <span className="m-value">124 km</span>
+              <span className="m-label">Odômetro</span>
+              <span className="m-value">{(vehicleProfile?.currentKm || 85000).toLocaleString('pt-BR')} KM</span>
             </div>
           </div>
           <div className="metric-item glass-panel">
-            <Car size={20} className="metric-icon" />
+            {isMoto ? <Bike size={20} className="metric-icon" /> : <Car size={20} className="metric-icon" />}
             <div className="metric-info">
-              <span className="m-label">Custo/KM</span>
-              <span className="m-value">R$ 0,92</span>
+              <span className="m-label">Reserva/KM</span>
+              <span className="m-value">{isMoto ? 'R$ 0,10/KM' : 'R$ 0,25/KM'}</span>
             </div>
           </div>
           <div className="metric-item glass-panel">
             <TrendingUp size={20} className="metric-icon" />
             <div className="metric-info">
-              <span className="m-label">Ganho/Hora</span>
-              <span className="m-value">R$ 20,84</span>
+              <span className="m-label">Status Garagem</span>
+              <span className="m-value" style={{ color: 'var(--success)' }}>100% Em Dia</span>
             </div>
           </div>
         </div>

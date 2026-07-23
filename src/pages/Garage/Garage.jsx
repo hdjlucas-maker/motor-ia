@@ -1,40 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Calendar, Gauge, AlertTriangle, PlusCircle, CheckCircle, Trash2, RefreshCw } from 'lucide-react';
+import { Wrench, Calendar, Gauge, AlertTriangle, PlusCircle, CheckCircle, Trash2, RefreshCw, Car, Bike, Settings } from 'lucide-react';
+import { useUser } from '../../context/UserContext';
 import './Garage.css';
 
-const DEFAULT_PARTS = [
-  { id: '1', name: 'Troca de Óleo + Filtro', intervalKm: 10000, lastKm: 80000, lastDate: '2026-05-10', cost: 250 },
+const DEFAULT_CAR_PARTS = [
+  { id: '1', name: 'Troca de Óleo + Filtro (Carro)', intervalKm: 5000, lastKm: 80000, lastDate: '2026-05-10', cost: 250 },
   { id: '2', name: 'Pastilhas de Freio', intervalKm: 25000, lastKm: 70000, lastDate: '2026-01-15', cost: 180 },
   { id: '3', name: 'Pneus Dianteiros', intervalKm: 40000, lastKm: 50000, lastDate: '2025-08-20', cost: 800 },
   { id: '4', name: 'Filtro de Ar do Motor', intervalKm: 15000, lastKm: 80000, lastDate: '2026-05-10', cost: 60 },
 ];
 
+const DEFAULT_MOTO_PARTS = [
+  { id: 'm1', name: 'Kit Relação (Corrente/Pinhão/Coroa)', intervalKm: 15000, lastKm: 10000, lastDate: '2026-03-01', cost: 220 },
+  { id: 'm2', name: 'Troca de Óleo de Motor 4T', intervalKm: 2000, lastKm: 24000, lastDate: '2026-06-12', cost: 45 },
+  { id: 'm3', name: 'Lubrificação da Corrente', intervalKm: 500, lastKm: 25200, lastDate: '2026-07-10', cost: 15 },
+  { id: 'm4', name: 'Pastilhas e Lonas de Freio', intervalKm: 10000, lastKm: 20000, lastDate: '2026-02-15', cost: 90 },
+];
+
 const Garage = () => {
-  const [currentKm, setCurrentKm] = useState(() => {
-    return Number(localStorage.getItem('motorIA_currentKm')) || 85000;
-  });
+  const { vehicleProfile, updateKm, setShowVehicleModal } = useUser();
+
+  const currentKm = vehicleProfile?.currentKm || 85000;
+  const isMoto = vehicleProfile?.type === 'moto';
 
   const [maintenances, setMaintenances] = useState(() => {
     const saved = localStorage.getItem('motorIA_maintenances');
-    return saved ? JSON.parse(saved) : DEFAULT_PARTS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error('Erro ao ler manutenções do localStorage:', e);
+      }
+    }
+    return isMoto ? DEFAULT_MOTO_PARTS : DEFAULT_CAR_PARTS;
   });
 
   const [showForm, setShowForm] = useState(false);
   
-  // New Service Form State
-  const [serviceName, setServiceName] = useState('Troca de Óleo + Filtro');
+  // State do Formulário
+  const [serviceName, setServiceName] = useState(isMoto ? 'Troca de Óleo de Motor 4T' : 'Troca de Óleo + Filtro (Carro)');
   const [serviceKm, setServiceKm] = useState(currentKm);
-  const [intervalKm, setIntervalKm] = useState(10000);
+  const [intervalKm, setIntervalKm] = useState(isMoto ? 2000 : 5000);
   const [cost, setCost] = useState('');
   const [workshop, setWorkshop] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('motorIA_currentKm', currentKm.toString());
-  }, [currentKm]);
-
-  useEffect(() => {
     localStorage.setItem('motorIA_maintenances', JSON.stringify(maintenances));
   }, [maintenances]);
+
+  const handleKmChange = (newVal) => {
+    const kmNum = Number(newVal) || 0;
+    updateKm(kmNum);
+  };
 
   const handleAddService = (e) => {
     e.preventDefault();
@@ -57,13 +75,13 @@ const Garage = () => {
   };
 
   const handleDeletePart = (id) => {
-    if (window.confirm('Tem certeza que deseja remover esta peça/serviço da lista?')) {
+    if (window.confirm('Tem certeza que deseja remover esta peça da lista?')) {
       setMaintenances(prev => prev.filter(item => item.id !== id));
     }
   };
 
   const handleConfirmReplacement = (id) => {
-    if (window.confirm('Confirmar troca? A quilometragem da peça será atualizada para o KM atual do seu carro!')) {
+    if (window.confirm('Confirmar manutenção? A quilometragem da peça será atualizada para o odômetro atual!')) {
       const today = new Date().toISOString().split('T')[0];
       setMaintenances(prev => prev.map(item => {
         if (item.id === id) {
@@ -80,9 +98,22 @@ const Garage = () => {
 
   return (
     <div className="garage-container">
-      <div className="page-header">
-        <h2>Garagem & Manutenção</h2>
-        <p>Acompanhe a saúde do seu veículo</p>
+      {/* Header do Veículo Registrado */}
+      <div className="vehicle-banner glass-panel">
+        <div className="banner-left">
+          <div className="banner-icon">
+            {isMoto ? <Bike size={32} className="icon-gold" /> : <Car size={32} className="icon-blue" />}
+          </div>
+          <div>
+            <h3>{vehicleProfile?.brand} {vehicleProfile?.model}</h3>
+            <p>Ano: {vehicleProfile?.year} • Combustível: {vehicleProfile?.fuelType} • {vehicleProfile?.category}</p>
+          </div>
+        </div>
+
+        <button className="btn-edit-vehicle" onClick={() => setShowVehicleModal(true)}>
+          <Settings size={16} />
+          <span>Alterar Veículo</span>
+        </button>
       </div>
 
       {/* Odometer Update Card */}
@@ -90,12 +121,12 @@ const Garage = () => {
         <div className="odometer-info">
           <Gauge size={24} className="icon-green" />
           <div>
-            <span className="odometer-label">Quilometragem Atual</span>
+            <span className="odometer-label">Quilometragem Atual do Odômetro</span>
             <div className="odometer-input-wrapper">
               <input 
                 type="number" 
                 value={currentKm} 
-                onChange={(e) => setCurrentKm(Number(e.target.value))}
+                onChange={(e) => handleKmChange(e.target.value)}
                 className="odometer-input" 
               />
               <span className="km-unit">KM</span>
@@ -105,30 +136,42 @@ const Garage = () => {
       </div>
 
       <div className="action-bar">
-        <h3>Peças & Serviços</h3>
+        <h3>Plano de Manutenção Preventiva</h3>
         <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
           <PlusCircle size={16} />
-          {showForm ? 'Fechar' : 'Novo Serviço'}
+          {showForm ? 'Fechar' : 'Nova Manutenção'}
         </button>
       </div>
 
-      {/* Service Form */}
+      {/* Form de Manutenção */}
       {showForm && (
         <div className="form-container glass-panel animate-slide-up">
           <form className="service-form" onSubmit={handleAddService}>
             <div className="form-group">
               <label>Peça ou Serviço</label>
-              <select className="form-input" value={serviceName} onChange={e => setServiceName(e.target.value)}>
-                <option value="Troca de Óleo + Filtro">Troca de Óleo + Filtro</option>
-                <option value="Pastilhas de Freio">Pastilhas de Freio</option>
-                <option value="Filtro de Ar">Filtro de Ar</option>
-                <option value="Pneus">Pneus</option>
-                <option value="Embreagem">Embreagem</option>
-                <option value="Suspensão">Suspensão</option>
-                <option value="Velas de Ignição">Velas de Ignição</option>
-                <option value="Correia Dentada">Correia Dentada</option>
-                <option value="Bateria">Bateria</option>
-              </select>
+              {isMoto ? (
+                <select className="form-input" value={serviceName} onChange={e => setServiceName(e.target.value)}>
+                  <option value="Troca de Óleo de Motor 4T">Troca de Óleo de Motor 4T</option>
+                  <option value="Kit Relação (Corrente/Pinhão/Coroa)">Kit Relação (Corrente/Pinhão/Coroa)</option>
+                  <option value="Lubrificação da Corrente">Lubrificação da Corrente</option>
+                  <option value="Pastilhas e Lonas de Freio">Pastilhas e Lonas de Freio</option>
+                  <option value="Pneu Traseiro / Dianteiro">Pneu Traseiro / Dianteiro</option>
+                  <option value="Cabo de Embreagem/Freio">Cabo de Embreagem/Freio</option>
+                  <option value="Vela de Ignição Moto">Vela de Ignição Moto</option>
+                </select>
+              ) : (
+                <select className="form-input" value={serviceName} onChange={e => setServiceName(e.target.value)}>
+                  <option value="Troca de Óleo + Filtro (Carro)">Troca de Óleo + Filtro (Carro)</option>
+                  <option value="Pastilhas de Freio">Pastilhas de Freio</option>
+                  <option value="Filtro de Ar do Motor">Filtro de Ar do Motor</option>
+                  <option value="Pneus">Pneus</option>
+                  <option value="Embreagem">Embreagem</option>
+                  <option value="Suspensão">Suspensão</option>
+                  <option value="Velas de Ignição">Velas de Ignição</option>
+                  <option value="Correia Dentada">Correia Dentada</option>
+                  <option value="Bateria">Bateria</option>
+                </select>
+              )}
             </div>
 
             <div className="form-group">
@@ -138,7 +181,7 @@ const Garage = () => {
 
             <div className="form-group">
               <label>Trocar a cada quantos KM?</label>
-              <input type="number" value={intervalKm} onChange={e => setIntervalKm(e.target.value)} placeholder="Ex: 10000" className="form-input" required />
+              <input type="number" value={intervalKm} onChange={e => setIntervalKm(e.target.value)} placeholder="Ex: 5000" className="form-input" required />
             </div>
 
             <div className="form-group">
@@ -148,7 +191,7 @@ const Garage = () => {
 
             <div className="form-group">
               <label>Nome da Oficina (Opcional)</label>
-              <input type="text" value={workshop} onChange={e => setWorkshop(e.target.value)} placeholder="Ex: Auto Center Silva" className="form-input" />
+              <input type="text" value={workshop} onChange={e => setWorkshop(e.target.value)} placeholder="Ex: Oficina Mecânica" className="form-input" />
             </div>
 
             <button type="submit" className="btn btn-primary submit-btn">Salvar Manutenção</button>
@@ -156,7 +199,7 @@ const Garage = () => {
         </div>
       )}
 
-      {/* Maintenance List */}
+      {/* Lista de Manutenções */}
       <div className="parts-list">
         {maintenances.map(part => {
           const nextKm = part.lastKm + part.intervalKm;
