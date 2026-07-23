@@ -17,7 +17,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.AI_API_KEY;
+    const rawApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.AI_API_KEY;
+    const apiKey = rawApiKey ? rawApiKey.trim() : '';
 
     const todayStr = new Date().toISOString().split('T')[0];
     const todayTransactions = (transactions || []).filter(t => t.date === todayStr);
@@ -32,8 +33,8 @@ export default async function handler(req, res) {
       return rem >= 0 && rem <= 1000;
     });
 
-    // Se houver chave API no Vercel (GEMINI_API_KEY)
-    if (apiKey && apiKey.trim().length > 10) {
+    // Se houver chave API no Vercel (suporta tanto chaves tradicionais quanto o novo padrão "AQ." do Google AI Studio)
+    if (apiKey && apiKey.length > 5) {
       try {
         const systemPrompt = `
 Você é a Motor IA, a mais completa e inteligente assistente consultora financeira, operacional e mecânica para motoristas de carros e entregadores de motos de aplicativo (Uber, 99, Indrive, iFood, Rappi, Zé Delivery).
@@ -89,14 +90,18 @@ TELEMETRIA ATUAL DO MOTORISTA:
 - Peças Próximas de Trocar: ${urgent.map(p => p.name).join(', ') || 'Nenhuma'}
         `;
 
-        const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+        // Suporte aos modelos mais recentes do Google Gemini (incluindo 2.5-flash, 2.0-flash e 1.5-flash)
+        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro'];
         
         for (const model of models) {
           try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             const apiResponse = await fetch(url, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+              },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: systemPrompt + `\n\nPERGUNTA DO MOTORISTA/USUÁRIO: "${userQuery}"` }] }]
               })
@@ -108,6 +113,9 @@ TELEMETRIA ATUAL DO MOTORISTA:
               if (reply && reply.trim()) {
                 return res.status(200).json({ reply: reply.trim() });
               }
+            } else {
+              const errorText = await apiResponse.text();
+              console.warn(`Modelo ${model} respondeu status ${apiResponse.status}:`, errorText);
             }
           } catch (modelErr) {
             console.warn(`Tentativa com modelo ${model} falhou:`, modelErr);
