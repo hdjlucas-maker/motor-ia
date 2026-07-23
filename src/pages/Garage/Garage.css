@@ -1,0 +1,218 @@
+.garage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.icon-green {
+  color: var(--success);
+}
+
+/* Odometer Card */
+.odometer-card {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+}
+
+.odometer-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.odometer-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.odometer-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.odometer-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--accent-primary);
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  width: 130px;
+  outline: none;
+}
+
+.km-unit {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Action Bar */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+/* Service Form */
+.service-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Parts List */
+.parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.part-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 4px solid var(--success);
+}
+
+.part-card.urgent {
+  border-left-color: var(--warning);
+}
+
+.part-card.overdue {
+  border-left-color: var(--danger);
+  background: rgba(225, 25, 0, 0.05);
+}
+
+.part-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.part-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.part-title h4 {
+  font-size: 1rem;
+}
+
+.part-icon {
+  color: var(--text-secondary);
+}
+
+/* Badges */
+.badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.badge.success {
+  background: rgba(5, 163, 87, 0.15);
+  color: var(--success);
+}
+
+.badge.warning {
+  background: rgba(245, 166, 35, 0.15);
+  color: var(--warning);
+}
+
+.badge.danger {
+  background: rgba(225, 25, 0, 0.15);
+  color: var(--danger);
+}
+
+/* Part Details */
+.part-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.part-info {
+  display: flex;
+  justify-content: space-between;
+}
+
+.info-label {
+  color: var(--text-secondary);
+}
+
+.info-value {
+  font-weight: 500;
+}
+
+.part-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.remaining-km {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.overdue .remaining-km {
+  color: var(--danger);
+}
+
+.urgent .remaining-km {
+  color: var(--warning);
+}
+
+.part-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-btn {
+  background: rgba(5, 163, 87, 0.15);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.confirm-btn:hover {
+  background: var(--success);
+  color: white;
+}
+
+.delete-btn {
+  background: rgba(225, 25, 0, 0.15);
+  color: var(--danger);
+}
+
+.delete-btn:hover {
+  background: var(--danger);
+  color: white;
+}
