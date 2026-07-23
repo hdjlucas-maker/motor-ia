@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Cabeçalhos CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,13 +13,12 @@ export default async function handler(req, res) {
 
     if (!userQuery || typeof userQuery !== 'string' || !userQuery.trim()) {
       return res.status(200).json({ 
-        reply: "Olá! Sou a Motor IA. Como posso te ajudar hoje com suas finanças ou manutenção do carro?" 
+        reply: "Olá! Sou a Motor IA, sua consultora pessoal de manutenção (carro e moto) e finanças. Como posso te ajudar hoje?" 
       });
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.AI_API_KEY;
 
-    // Métricas para passar no prompt
     const todayStr = new Date().toISOString().split('T')[0];
     const todayTransactions = (transactions || []).filter(t => t.date === todayStr);
 
@@ -38,21 +36,49 @@ export default async function handler(req, res) {
     if (apiKey && apiKey.trim().length > 10) {
       try {
         const systemPrompt = `
-Você é a Motor IA, a mais inteligente assistente consultora financeira, operacional e mecânica para motoristas de aplicativo (Uber, 99, Indrive).
-Seu objetivo é ajudar o motorista a lucrar mais, economizar combustível, prevenir quebras de carro e organizar suas contas.
+Você é a Motor IA, a mais completa e inteligente assistente consultora financeira, operacional e mecânica para motoristas de carros e entregadores de motos de aplicativo (Uber, 99, Indrive, iFood, Rappi, Zé Delivery).
 
-Diretrizes:
-- Responda em Português do Brasil com tom profissional, motivador, humano e prático.
-- Use negrito (**texto**) e tópicos com marcadores quando ajudar a leitura.
-- Se a pergunta for totalmente fora do escopo de trabalho do motorista (ex: receitas de bolo, futebol, política, medicina), responda educadamente que seu foco é exclusivo na rotina e finanças do motorista de aplicativo.
-- Responda qualquer dúvida sobre o app, passo a passo de como cadastrar ganhos/gastos, estratégias de horário, economia de combustível, cálculo de reserva, imposto, manutenção de óleo/pneus e finanças com extrema precisão!
+Você é responsável pela Central de FAQ, Suporte ao Usuário e Consultoria Técnica do Aplicativo Motor IA.
+
+SEUS CONHECIMENTOS PRINCIPAIS:
+1. MANUTENÇÃO PREVENTIVA DE CARRO:
+   - Troca de óleo de motor + filtro a cada 5.000 KM (uso severo urbano) ou 10.000 KM (estrada). Nunca trocar óleo sem trocar o filtro.
+   - Sistema de arrefecimento: Água desmineralizada + aditivo concentrado (NUNCA água de torneira por causa do cloro que corrói tudo). Nível com motor frio.
+   - Pneus e Calibragem: Calibragem fria semanal; alinhamento e balanceamento a cada 10.000 KM. Indicador TWI (1.6mm).
+   - Freios: Pastilhas, discos, fluido DOT4 a cada 20.000 KM/1 ano. Chiado metálico indica pastilha queimando o disco.
+   - Correia Dentada (40k-50k km), Velas de Ignição (20k-30k km), Suspensão, Bateria (2-3 anos), Embreagem.
+
+2. MANUTENÇÃO PREVENTIVA DE MOTO:
+   - Kit Relação (corrente, pinhão, coroa): Lubrificação a cada 500 KM ou pós-chuva (óleo 90/spray). Folga entre 2cm e 3cm. Dentes finos/curvados = troca imediata.
+   - Óleo 4T: Troca entre 1.000 KM e 2.500 KM conforme uso. Checagem semanal na vareta.
+   - Freios (lonas/pastilhas) e Pneus: Calibragem semanal e verificação limite no espelho de freio.
+
+3. SUPORTE DO APLICATIVO MOTOR IA:
+   - Lançar Ganhos: Aba Finanças -> Lançar Ganho -> Valor -> Salvar.
+   - Lançar Gastos: Aba Finanças -> Lançar Despesa -> Categoria (Combustível, Comida, Oficina, Lavagem) -> Salvar.
+   - Garagem Preventiva: Aba Garagem -> Digitar odômetro atual -> Renovar peças ao realizar manutenção.
+   - Relatórios: Aba Relatórios -> Baixar Excel (.xlsx) ou Imprimir PDF.
+
+4. FINANÇAS & CUSTO POR KM:
+   - Reserva de Emergência/Manutenção: Guardar R$ 0,20 a R$ 0,30 por KM para Carros; R$ 0,08 a R$ 0,12 por KM para Motos.
+   - Cálculo Flex (Etanol vs Gasolina): Se (Preço Etanol / Preço Gasolina) < 0,70 vale Etanol; caso contrário, Gasolina.
+
+5. EMERGÊNCIAS NA RUA:
+   - Motor Esquentando/Fumaça: Pare no acostamento, desligue o motor, ligue pisca-alerta, NUNCA abra o reservatório quente.
+   - Luz Vermelha do Óleo: Parar OBRIGATORIAMENTE na hora.
+   - Luz Amarela da Injeção: Falha de queima/combustível adulterado.
+
+DIRETRIZES DE RESPOSTA:
+- Responda em Português do Brasil de forma clara, profissional, didática, amigável e motivadora.
+- Formate com tópicos em marcadores (•) e termos importantes em **negrito**.
+- Responda diretamente à dúvida do motorista com passo a passo prático.
 
 TELEMETRIA ATUAL DO MOTORISTA:
 - Data Hoje: ${todayStr}
 - Faturamento Bruto Hoje: R$ ${todayGross.toFixed(2)}
 - Despesas Hoje: R$ ${todayExpenses.toFixed(2)}
 - Lucro Líquido Real Hoje: R$ ${todayNet.toFixed(2)}
-- Odômetro Atual do Veículo: ${currentKm.toLocaleString('pt-BR')} KM
+- Odômetro Atual: ${currentKm.toLocaleString('pt-BR')} KM
 - Peças Vencidas: ${overdue.map(p => p.name).join(', ') || 'Nenhuma'}
 - Peças Próximas de Trocar: ${urgent.map(p => p.name).join(', ') || 'Nenhuma'}
         `;
@@ -66,7 +92,7 @@ TELEMETRIA ATUAL DO MOTORISTA:
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                contents: [{ parts: [{ text: systemPrompt + `\n\nPERGUNTA DO MOTORISTA: "${userQuery}"` }] }]
+                contents: [{ parts: [{ text: systemPrompt + `\n\nPERGUNTA DO MOTORISTA/USUÁRIO: "${userQuery}"` }] }]
               })
             });
 
@@ -82,85 +108,148 @@ TELEMETRIA ATUAL DO MOTORISTA:
           }
         }
       } catch (geminiErr) {
-        console.warn('Erro ao chamar Gemini API no Vercel:', geminiErr);
+        console.warn('Erro na chamada Gemini API no Vercel:', geminiErr);
       }
     }
 
-    // Engine Local Serverless de Alta Inteligência
-    const reply = generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent, transactions });
+    // Engine Local Serverless com FAQ Completo de Manutenção de Carro & Moto e Suporte
+    const reply = generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent });
     return res.status(200).json({ reply });
 
   } catch (error) {
     console.error('Erro na API Serverless:', error);
     return res.status(200).json({ 
-      reply: "Sou a Motor IA! Estou pronta para te ajudar com seu faturamento, lucros e manutenção do veículo. Pode me fazer uma pergunta sobre seu dia de trabalho!" 
+      reply: "Sou a Motor IA! Estou pronta para te ajudar com seu faturamento, lucros, suporte do app e manutenção do seu carro ou moto. Pode me fazer uma pergunta!" 
     });
   }
 }
 
-function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent, transactions }) {
+function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent }) {
   const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   // 1. Fora do escopo
   const offTopicKeywords = ['pao', 'bolo', 'futebol', 'jogo', 'politica', 'medicina', 'filme', 'musica', 'piada', 'namorad', 'receita'];
   if (offTopicKeywords.some(kw => q.includes(kw))) {
-    return "Posso ajudar apenas com assuntos relacionados ao Motor IA e ao seu trabalho como motorista de aplicativo. Se tiver dúvidas sobre faturamento, abastecimento ou manutenção do seu carro, pode perguntar!";
+    return "Posso ajudar apenas com assuntos relacionados ao Motor IA, finanças e manutenção do seu veículo (carro ou moto) de trabalho. Se tiver dúvidas sobre faturamento, peças ou como usar o app, pode perguntar!";
   }
 
-  // 2. Como adicionar / cadastrar / registrar dados no app
-  if (q.includes('adicion') || q.includes('cadastr') || q.includes('registr') || q.includes('lancar') || q.includes('colocar') || q.includes('inserir') || q.includes('como eu') || q.includes('como faco')) {
-    return `📝 **Como Adicionar seus Dados no Motor IA (Passo a Passo):**\n\n` +
-           `1. **Lançar Faturamento (Uber/99/Indrive):**\n` +
-           `   Toque na aba **Finanças** no menu inferior -> selecione **"Ganho"** -> digite o valor faturado no dia -> clique em **Salvar**.\n\n` +
-           `2. **Lançar Despesas (Combustível, Comida, Oficina):**\n` +
-           `   Na aba **Finanças** -> selecione **"Despesa"** -> escolha a categoria (Combustível, Alimentação, Manutenção) -> coloque o valor -> clique em **Salvar**.\n\n` +
-           `3. **Atualizar KM do Carro & Peças:**\n` +
-           `   Toque na aba **Garagem** -> digite a quilometragem atual do seu odômetro. O app calcula sozinho o tempo de troca de óleo, freios e pneus!\n\n` +
-           `💡 O seu **Lucro Líquido Real** é calculado automaticamente na tela inicial do app!`;
+  // 2. EMERGÊNCIAS NA RUA
+  if (q.includes('esquentando') || q.includes('fumaca') || q.includes('ferveu') || q.includes('painel acendeu') || q.includes('luz vermelha') || q.includes('luz de oleo') || q.includes('luz da injecao')) {
+    if (q.includes('luz') || q.includes('painel')) {
+      return `⚠️ **Guia de Luzes no Painel do Veículo:**\n\n` +
+             `• 🔴 **Luz Vermelha do Óleo:** **PARE O CARRO NA HORA!** Desligue o motor imediatamente. Significa falta de pressão de óleo. Rodar assim destrói o motor.\n` +
+             `• 🔴 **Luz da Bateria / Freio:** Verifique se a bateria descarregou ou se o freio de mão está puxado.\n` +
+             `• 🟡 **Luz Amarela da Injeção Eletrônica:** Indica falha na combustão, combustível batizado ou sensor defeituoso. Vá dirigindo com calma até um mecânico de confiança.`;
+    }
+    return `🚨 **EMERGÊNCIA: Motor Esquentando ou Saindo Fumaça:**\n\n` +
+           `1. **Pare imediatamente em local seguro** e desligue a ignição.\n` +
+           `2. **Ligue o pisca-alerta** e posicione o triângulo de sinalização.\n` +
+           `3. **NUNCA abra a tampa do reservatório ou do radiador enquanto estive quente!** Risco de queimaduras graves com água sob alta pressão.\n` +
+           `4. Aguarde o motor esfriar totalmente (30 a 45 minutos) antes de verificar o reservatório de água desmineralizada + aditivo.`;
   }
 
-  // 3. Sobre o app / Saber mais / Para que serve
-  if (q.includes('saber mais') || q.includes('sobre esse app') || q.includes('sobre o app') || q.includes('motor-ia') || q.includes('motor ia') || q.includes('ajuda em que') || q.includes('pra que serve') || q.includes('o que e') || q.includes('funciona')) {
-    return `🚗 **Bem-vindo ao Motor IA — O Copiloto do Motorista de Aplicativo!**\n\n` +
-           `Este aplicativo foi construído sob medida para quem roda na Uber, 99 ou Indrive ter mais dinheiro no bolso.\n\n` +
-           `✨ **Recursos Principais:**\n` +
-           `• **Lucro Líquido Real:** Saiba exatamente o que sobrou no bolso descontando gasolina e refeições.\n` +
-           `• **Garagem & Alertas Preventivos:** Acompanhe o odômetro (**${currentKm.toLocaleString('pt-BR')} KM**) e saiba exatamente quando trocar óleo, pastilhas e pneus.\n` +
-           `• **Assistente IA Conectada:** Tire dúvidas sobre seus custos, estratégias de horário e melhor tipo de combustível.\n` +
-           `• **Relatórios & Excel:** Baixe planilhas completas dos seus ganhos para seu controle pessoal.\n\n` +
-           `👉 Dica: Comece adicionando suas corridas de hoje na aba **Finanças**!`;
+  // 3. FAQ DE MOTO (Corrente, Relação, Óleo 4T, Pneus, Entregas)
+  if (q.includes('moto') || q.includes('corrente') || q.includes('relacao') || q.includes('pinhao') || q.includes('coroa') || q.includes('oleo 4t')) {
+    return `🏍️ **Guia Básico de Manutenção Preventiva para Motos (iFood / Rappi / Uber Flash):**\n\n` +
+           `1. **Kit Relação & Corrente:**\n` +
+           `   • Lubrifique a corrente a cada **500 KM** (ou imediatamente após rodar na chuva) com óleo 90 ou spray lubrificante.\n` +
+           `   • Mantenha a folga da corrente entre **2 cm e 3 cm**. Corrente muito solta pode escapar e travar a roda!\n\n` +
+           `2. **Óleo de Motor 4T:**\n` +
+           `   • Troque entre **1.000 KM e 2.500 KM** (uso urbano severo de entrega degrada rápido).\n` +
+           `   • Verifique o nível pela vareta com a moto em local plano e no cavalete central.\n\n` +
+           `3. **Pneus & Freios:**\n` +
+           `   • Calibre semanalmente. Pneu murcho prejudica a estabilidade nas curvas.\n` +
+           `   • Confira a margem de desgaste das pastilhas/lonas a cada 3.000 KM.`;
   }
 
-  // 4. Ganhos e Lucro de Hoje
-  if (q.includes('hoje') || q.includes('ganhei') || q.includes('lucro') || q.includes('faturei') || q.includes('quanto fiz') || q.includes('resultado')) {
-    return `📊 **Resumo de Hoje:**\n\n` +
+  // 4. FAQ DE CARRO (Óleo, Filtros, Arrefecimento/Radiador, Pneus, Freios, Correia, Velas)
+  if (q.includes('cuidar') || q.includes('manutencao') || q.includes('veiculo') || q.includes('carro') || q.includes('radiador') || q.includes('agua') || q.includes('calibrar') || q.includes('vela') || q.includes('correia')) {
+    if (q.includes('radiador') || q.includes('agua') || q.includes('aditivo')) {
+      return `🌡️ **Manutenção do Radiador e Arrefecimento do Carro:**\n\n` +
+             `• **Nunca use água de torneira!** O cloro corrói o bloco e o radiador. Use **água desmineralizada + aditivo de radiador**.\n` +
+             `• Verifique o nível no reservatório semanalmente com o motor **frio**.\n` +
+             `• Troque todo o fluido de arrefecimento a cada **2 anos**.`;
+    }
+
+    if (q.includes('pneu') || q.includes('calibr') || q.includes('alinhament')) {
+      return `🛞 **Cuidados com Pneus, Calibragem e Alinhamento:**\n\n` +
+             `• **Calibragem Fria:** Calibre semanalmente com pneus frios. Pneu murcho gasta até 10% mais combustível!\n` +
+             `• **Alinhamento & Balanceamento:** Faça a cada **10.000 KM**.\n` +
+             `• **Marca TWI:** Se a borracha atingir os blocos de segurança TWI (1.6mm), o pneu está careca e precisa ser trocado imediatamente.`;
+    }
+
+    return `🚗 **Guia de Manutenção Preventiva Básica para Veículo de Trabalho:**\n\n` +
+           `1. **Troca de Óleo e Filtro de Motor:**\n` +
+           `   • Troque a cada **5.000 KM** (uso urbano severo de app) ou **10.000 KM** (estrada).\n` +
+           `   • **Sempre troque o filtro de óleo junto com o óleo novo!**\n\n` +
+           `2. **Sistema de Arrefecimento (Radiador):**\n` +
+           `   • Use **água desmineralizada + aditivo orgânico**. Nunca coloque água da torneira.\n\n` +
+           `3. **Pneus & Calibragem:**\n` +
+           `   • Calibre semanalmente com pneus frios. Alinhamento/balanceamento a cada **10.000 KM**.\n\n` +
+           `4. **Freios & Pastilhas:**\n` +
+           `   • Se ouvir um chiado metálico ao pisar no freio, a pastilha gastou até o fim e está rando o disco. Substitua já!`;
+  }
+
+  // 5. SUPORTE DO APP E COMO USAR (Ganhos, Gastos, Garagem, Relatórios, Reserva)
+  if (q.includes('faq') || q.includes('suporte') || q.includes('duvida') || q.includes('adicion') || q.includes('cadastr') || q.includes('lancar') || q.includes('como usar') || q.includes('ajuda')) {
+    return `📖 **Central de Suporte & Como Usar o Motor IA:**\n\n` +
+           `• 💰 **Como lançar faturamento Uber/99?**\n` +
+           `  Aba **Finanças** -> clique em **Lançar Ganho** -> digite o valor e selecione a categoria -> clique em **Salvar**.\n\n` +
+           `• ⛽ **Como lançar combustível e alimentação?**\n` +
+           `  Aba **Finanças** -> clique em **Lançar Despesa** -> informe o valor e tipo de gasto -> clique em **Salvar**.\n\n` +
+           `• 🛠️ **Como controlar o odômetro e a Garagem?**\n` +
+           `  Aba **Garagem** -> informe a quilometragem atual do veículo (**${currentKm.toLocaleString('pt-BR')} KM**). O app alerta o vencimento do óleo, pneus e freios!\n\n` +
+           `• 📊 **Como baixar relatórios em Excel/PDF?**\n` +
+           `  Aba **Relatórios** -> selecione o período -> clique em **Baixar Excel (.xlsx)** ou **Imprimir PDF**.\n\n` +
+           `• 💵 **Quanto guardar para manutenção?**\n` +
+           `  Separe entre **R$ 0,20 e R$ 0,30 por KM** para carros, e **R$ 0,08 a R$ 0,12 por KM** para motos numa caixinha.`;
+  }
+
+  // 6. FINANÇAS, GUARDA POR KM E FLEX
+  if (q.includes('reserva') || q.includes('guardar') || q.includes('custo por km') || q.includes('etanol') || q.includes('gasolina')) {
+    if (q.includes('etanol') || q.includes('gasolina') || q.includes('flex')) {
+      return `⛽ **Cálculo de Combustível Flex (Etanol vs Gasolina):**\n\n` +
+             `• Divida o valor do litro do **Etanol** pelo valor da **Gasolina**.\n` +
+             `• Se der **menos de 0,70**: Etanol é mais vantajoso.\n` +
+             `• Se der **0,70 ou mais**: Gasolina rende mais e vale mais a pena!`;
+    }
+    return `💵 **Reserva Financeira por Quilômetro Rodado:**\n\n` +
+           `• **Carros:** Guarde de **R$ 0,20 a R$ 0,30 por KM** rodado.\n` +
+           `• **Motos:** Guarde de **R$ 0,08 a R$ 0,12 por KM** rodado.\n\n` +
+           `💡 Guarde esse dinheiro diariamente numa conta rendendo 100% do CDI. Assim você paga pneus, óleo e revisões sem juros!`;
+  }
+
+  // 7. Ganhos e Lucro
+  if (q.includes('hoje') || q.includes('ganhei') || q.includes('lucro') || q.includes('faturei') || q.includes('quanto fiz')) {
+    return `📊 **Resumo Financeiro de Hoje:**\n\n` +
            `• Faturamento Bruto: **R$ ${todayGross.toFixed(2)}**\n` +
            `• Despesas: **R$ ${todayExpenses.toFixed(2)}**\n` +
            `• **LUCRO LÍQUIDO REAL: R$ ${todayNet.toFixed(2)}**\n\n` +
-           (todayGross === 0 ? "💡 Toque na aba **Finanças** para lançar suas corridas e ver seu lucro calculado!" : "🔥 Continue focado na gestão de despesas!");
+           (todayGross === 0 ? "💡 Registre suas corridas de hoje na aba **Finanças**!" : "🔥 Bom trabalho! Mantenha suas despesas controladas.");
   }
 
-  // 5. Garagem e Peças
-  if (q.includes('garagem') || q.includes('peca') || q.includes('oleo') || q.includes('pneu') || q.includes('freio') || q.includes('vencid') || q.includes('revis')) {
+  // 8. Garagem
+  if (q.includes('garagem') || q.includes('peca') || q.includes('oleo') || q.includes('pneu') || q.includes('freio') || q.includes('vencid')) {
     if (overdue.length > 0) {
-      return `🚨 **ATENÇÃO: Peças VENCIDAS!**\n` +
+      return `🚨 **ATENÇÃO: Peças VENCIDAS na Garagem!**\n` +
              overdue.map(p => `• **${p.name}**: Passou ${(currentKm - (p.lastKm + p.intervalKm)).toLocaleString('pt-BR')} KM da troca.`).join('\n') +
-             `\n\n💡 Clique no botão **Renovar** na aba Garagem após trocar a peça!`;
+             `\n\n💡 Ao fazer a manutenção no mecânico, abra a aba Garagem e toque em **Renovar**!`;
     }
     return `✅ **Sua garagem está 100% em dia!** Odômetro atual: **${currentKm.toLocaleString('pt-BR')} KM**.`;
   }
 
-  // 6. Saudações
+  // 9. Saudações
   if (q.includes('oi') || q.includes('ola') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite')) {
-    return `Olá, parceiro motorista! Sou a Motor IA, sua consultora financeira e mecânica.\n\n` +
-           `Como posso te ajudar agora? Você pode me perguntar como lançar seus ganhos, sobre a saúde do seu carro ou quanto você lucrou hoje!`;
+    return `Olá! Sou a Motor IA, sua consultora pessoal de manutenção (carro e moto) e finanças para motorista.\n\n` +
+           `Como posso te ajudar agora? Pode me perguntar sobre dicas de manutenção, como cuidar do radiador, da relação da moto, suporte do aplicativo ou quanto você lucrou hoje!`;
   }
 
-  // 7. Resposta Padrão Inteligente com Instrução Direta
-  return `Sou a Motor IA, sua consultora pessoal!\n\n` +
-         `💡 **Como posso te ajudar agora?**\n` +
-         `• Digite **"como adicionar meus dados"** para ver o tutorial de uso.\n` +
-         `• Digite **"quanto ganhei hoje"** para ver seu faturamento real.\n` +
-         `• Digite **"como tá o carro"** para ver o alerta da garagem.\n\n` +
-         `📊 **Seu status atual:** Lucro Hoje R$ ${todayNet.toFixed(2)} | Odômetro ${currentKm.toLocaleString('pt-BR')} KM.`;
+  // 10. Resposta Padrão Guiada
+  return `Sou a Motor IA, sua consultora de faturamento, manutenção e suporte!\n\n` +
+         `💡 **Respostas Rápidas & Central de FAQ:**\n` +
+         `• Digite **"como cuidar do carro"** para ver o guia de manutenção preventiva.\n` +
+         `• Digite **"manutenção de moto"** para ver os cuidados com corrente e óleo 4T.\n` +
+         `• Digite **"como usar o app"** para aprender a lançar corridas, despesas e usar a Garagem.\n` +
+         `• Digite **"emergência"** para saber o que fazer com motor esquentando ou luzes acesas.\n\n` +
+         `📊 **Seu status:** Lucro Hoje R$ ${todayNet.toFixed(2)} | Odômetro ${currentKm.toLocaleString('pt-BR')} KM.`;
 }

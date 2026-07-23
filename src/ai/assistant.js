@@ -1,6 +1,7 @@
 /**
  * Motor IA Assistant Engine - Frontend Client & Serverless Backend Integration
  */
+import { FAQ_ITEMS, searchFAQ } from './knowledgeBase';
 
 export async function processQuery({ userQuery, transactions = [], currentKm = 0, maintenances = [] }) {
   // 1. Tenta chamar o Backend Serverless (Vercel API /api/chat)
@@ -41,26 +42,37 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
   const todayNet = todayGross - todayExpenses;
 
   const overdueParts = (maintenances || []).filter(m => (m.lastKm + m.intervalKm) < currentKm);
-  const urgentParts = (maintenances || []).filter(m => {
-    const rem = (m.lastKm + m.intervalKm) - currentKm;
-    return rem >= 0 && rem <= 1000;
-  });
 
-  // O que faz / Para que serve o app
-  if (q.includes('ajuda em que') || q.includes('pra que serve') || q.includes('o que faz') || q.includes('funciona') || q.includes('utilidade')) {
+  // Busca na base de FAQ
+  const matchingFaq = searchFAQ(userQuery);
+  if (matchingFaq.length > 0) {
+    return matchingFaq[0].answer;
+  }
+
+  // Emergências
+  if (q.includes('esquentando') || q.includes('fumaca') || q.includes('ferveu') || q.includes('luz vermelha') || q.includes('luz da injecao')) {
+    return `🚨 **EMERGÊNCIA NO VEÍCULO:**\n\n` +
+           `1. **Pare imediatamente em local seguro** e desligue o motor.\n` +
+           `2. **Ligue o pisca-alerta** e coloque o triângulo.\n` +
+           `3. **NUNCA abra o reservatório ou radiador quente** (risco de queimadura por água pressurizada).\n` +
+           `4. Se for a **luz vermelha do óleo**, não dê partida sob hipótese alguma. Mande guinchar para a oficina!`;
+  }
+
+  // Suporte do App / O que faz
+  if (q.includes('ajuda em que') || q.includes('pra que serve') || q.includes('o que faz') || q.includes('funciona') || q.includes('utilidade') || q.includes('como usar')) {
     return `🚗 **O Motor IA é o seu assistente financeiro e mecânico completo!**\n\n` +
            `Ele ajuda você em 4 pilares principais:\n\n` +
            `1. **Lucro Líquido Real:** Mostra exatamente quanto sobrou no bolso descontando combustível, alimentação e taxas.\n` +
-           `2. **Garagem & Peças:** Acompanha a quilometragem do seu carro (**${currentKm.toLocaleString('pt-BR')} KM**) e te avisa ANTES do óleo, pneus e freios vencerem.\n` +
-           `3. **Consultoria Financeira:** Responde suas dúvidas sobre estratégias de horário, economia de combustível e custo por KM.\n` +
+           `2. **Garagem & Peças:** Acompanha a quilometragem do seu veículo (**${currentKm.toLocaleString('pt-BR')} KM**) e te avisa ANTES do óleo, pneus e freios vencerem.\n` +
+           `3. **Consultoria & Central de FAQ:** Responde suas dúvidas sobre manutenção de carro/moto, economia de combustível e suporte ao app.\n` +
            `4. **Relatórios Excel & PDF:** Permite exportar todos os seus dados em planilhas completas na aba **Relatórios**.\n\n` +
-           `💡 Cadastre seus ganhos e abastecimentos na aba **Finanças** para ver todos os seus números em tempo real!`;
+           `💡 Cadastre seus ganhos e abastecimentos na aba **Finanças** para ver seus números em tempo real!`;
   }
 
   // Saudações
   if (q.includes('oi') || q.includes('ola') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite')) {
-    return `Olá! Sou a Motor IA, sua consultora pessoal de faturamento e manutenção.\n\n` +
-           `Estou conectada aos seus dados em tempo real. Pode me perguntar quanto você lucrou hoje, se o óleo está vencido ou para que serve o aplicativo!`;
+    return `Olá! Sou a Motor IA, sua consultora pessoal de faturamento, manutenção de veículos e suporte ao aplicativo.\n\n` +
+           `Estou conectada aos seus dados em tempo real. Como posso te ajudar agora?`;
   }
 
   // Ganhos
@@ -86,7 +98,7 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
   // Fora do escopo
   const offTopicKeywords = ['pao', 'bolo', 'futebol', 'jogo', 'politica', 'medicina', 'filme', 'musica', 'piada'];
   if (offTopicKeywords.some(kw => q.includes(kw))) {
-    return "Posso ajudar apenas com assuntos relacionados ao Motor IA e ao seu trabalho como motorista de aplicativo. Se tiver dúvidas sobre faturamento, abastecimento ou manutenção do seu carro, pode perguntar!";
+    return "Posso ajudar apenas com assuntos relacionados ao Motor IA, finanças e manutenção do seu veículo de aplicativo. Se tiver dúvidas sobre faturamento, peças ou suporte, pode perguntar!";
   }
 
   // Resposta Padrão
@@ -95,5 +107,5 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
          `• Lucro Líquido Hoje: **R$ ${todayNet.toFixed(2)}**\n` +
          `• Odômetro: **${currentKm.toLocaleString('pt-BR')} KM**\n` +
          (overdueParts.length > 0 ? `• 🚨 **${overdueParts.length} peça(s) vencida(s)** na Garagem.\n\n` : `• ✅ Manutenções em dia.\n\n`) +
-         `Pode me perguntar sobre seu faturamento, custos por KM, despesas de combustível ou como usar o app!`;
+         `Pode me perguntar sobre seu faturamento, manutenção de carro ou moto, suporte do aplicativo ou emergências!`;
 }

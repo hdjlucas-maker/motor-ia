@@ -1,22 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Trash2 } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Trash2, HelpCircle, ChevronDown, ChevronUp, Search, Car, Bike, Wallet, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { processQuery } from '../../ai/assistant';
+import { MAINTENANCE_FAQ_CATEGORIES, FAQ_ITEMS, searchFAQ } from '../../ai/knowledgeBase';
 import './AI.css';
-
-const QUICK_QUESTIONS = [
-  "Quanto ganhei hoje e qual meu lucro?",
-  "Como está o status da minha Garagem?",
-  "Vale a pena continuar rodando agora?",
-  "Quanto preciso guardar por KM para peças?",
-  "Com o que mais gastei dinheiro?",
-  "Qual meu acumulado no mês?"
-];
 
 const INITIAL_MESSAGE = {
   id: 'init-1',
   sender: 'ai',
-  text: 'Olá! Sou a Motor IA, sua consultora pessoal de faturamento e mecânica.\n\nEstou conectada ao seu financeiro e à sua garagem em tempo real. Como posso te ajudar hoje?',
+  text: 'Olá! Sou a Motor IA, sua consultora pessoal de faturamento, manutenção (carro e moto) e suporte ao aplicativo.\n\nEstou conectada ao seu financeiro e à sua garagem em tempo real. Como posso te ajudar hoje?',
   timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 };
 
@@ -53,7 +45,7 @@ const FormattedText = ({ content }) => {
 const AI = () => {
   const { transactions } = useFinance();
 
-  // Carrega histórico de mensagens do localStorage ou inicia com mensagem padrão
+  // Histórico de mensagens do localStorage ou mensagem padrão
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('motorIA_chat_history');
     if (saved) {
@@ -61,7 +53,7 @@ const AI = () => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
-        console.error('Erro ao ler historico do chat:', e);
+        console.error('Erro ao ler histórico do chat:', e);
       }
     }
     return [INITIAL_MESSAGE];
@@ -69,9 +61,13 @@ const AI = () => {
 
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showFaqModal, setShowFaqModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [faqSearch, setFaqSearch] = useState('');
+
   const chatEndRef = useRef(null);
 
-  // Dados da Garagem carregados do localStorage
+  // Telemetria da Garagem
   const currentKm = Number(localStorage.getItem('motorIA_currentKm')) || 85000;
   const maintenances = (() => {
     const saved = localStorage.getItem('motorIA_maintenances');
@@ -86,7 +82,6 @@ const AI = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Salvar historico no localStorage
   useEffect(() => {
     localStorage.setItem('motorIA_chat_history', JSON.stringify(messages));
   }, [messages]);
@@ -114,7 +109,6 @@ const AI = () => {
     setIsTyping(true);
 
     try {
-      // Processa a consulta
       const replyText = await processQuery({
         userQuery: query,
         transactions,
@@ -144,19 +138,48 @@ const AI = () => {
     }
   };
 
+  // Filtragem de perguntas do FAQ
+  const filteredFaqs = FAQ_ITEMS.filter(item => {
+    const matchesCat = selectedCategory === 'all' || item.category === selectedCategory;
+    if (!matchesCat) return false;
+
+    if (!faqSearch.trim()) return true;
+
+    const searchLower = faqSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const qLower = item.question.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const aLower = item.answer.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const kwLower = item.keywords.some(kw => kw.includes(searchLower));
+
+    return qLower.includes(searchLower) || aLower.includes(searchLower) || kwLower;
+  });
+
+  const handleSelectFaqQuestion = (question) => {
+    setShowFaqModal(false);
+    handleSend(question);
+  };
+
   return (
     <div className="ai-container">
-      {/* Header Limpo e Profissional */}
+      {/* Header com Ações Rápidas */}
       <div className="page-header header-ai-flex">
         <div>
           <div className="header-title-ai">
             <Sparkles className="icon-sparkle" size={22} />
             <h2>Motor IA</h2>
           </div>
-          <p>Consultoria financeira e mecânica em tempo real</p>
+          <p>Consultoria financeira, mecânica & Central de Suporte</p>
         </div>
 
         <div className="ai-header-actions">
+          <button 
+            className={`btn-faq-toggle ${showFaqModal ? 'active' : ''}`}
+            onClick={() => setShowFaqModal(!showFaqModal)}
+          >
+            <HelpCircle size={18} />
+            <span>Central de FAQ & Suporte</span>
+            {showFaqModal ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+
           <button 
             className="btn-icon-ai danger" 
             title="Limpar Conversa"
@@ -167,13 +190,90 @@ const AI = () => {
         </div>
       </div>
 
-      {/* Sugestões Rápidas */}
+      {/* Painel Expansível de FAQ & Suporte */}
+      {showFaqModal && (
+        <div className="faq-panel glass-panel">
+          <div className="faq-panel-header">
+            <h3>📖 Central de Dúvidas Frequentes & Manutenção</h3>
+            <p>Selecione uma categoria ou busque por qualquer dúvida sobre seu carro, moto ou uso do app:</p>
+          </div>
+
+          {/* Busca no FAQ */}
+          <div className="faq-search-box">
+            <Search size={18} className="search-icon" />
+            <input 
+              type="text" 
+              placeholder="Buscar por óleo, radiador, relação de moto, Uber, freio..." 
+              value={faqSearch}
+              onChange={(e) => setFaqSearch(e.target.value)}
+              className="faq-search-input"
+            />
+          </div>
+
+          {/* Categorias */}
+          <div className="faq-categories">
+            <button 
+              className={`cat-btn ${selectedCategory === 'all' ? 'active' : ''}`}
+              onClick={() => setSelectedCategory('all')}
+            >
+              🔥 Todas ({FAQ_ITEMS.length})
+            </button>
+            {MAINTENANCE_FAQ_CATEGORIES.map(cat => (
+              <button 
+                key={cat.id}
+                className={`cat-btn ${selectedCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat.id)}
+              >
+                {cat.title}
+              </button>
+            ))}
+          </div>
+
+          {/* Lista de Perguntas */}
+          <div className="faq-items-grid">
+            {filteredFaqs.length > 0 ? (
+              filteredFaqs.map(item => (
+                <div 
+                  key={item.id} 
+                  className="faq-card"
+                  onClick={() => handleSelectFaqQuestion(item.question)}
+                >
+                  <div className="faq-card-question">
+                    <span className="faq-badge">{item.category.toUpperCase()}</span>
+                    <strong>{item.question}</strong>
+                  </div>
+                  <span className="faq-click-hint">Clique para perguntar à IA ➔</span>
+                </div>
+              ))
+            ) : (
+              <div className="faq-empty">
+                <p>Nenhuma dúvida encontrada para "{faqSearch}".</p>
+                <button className="btn-ask-custom" onClick={() => handleSelectFaqQuestion(faqSearch)}>
+                  Perguntar diretamente para Motor IA ➔
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sugestões Rápidas de Atalho */}
       <div className="quick-questions">
-        {QUICK_QUESTIONS.map((q, idx) => (
-          <button key={idx} className="quick-btn" onClick={() => handleSend(q)} disabled={isTyping}>
-            {q}
-          </button>
-        ))}
+        <button className="quick-btn" onClick={() => handleSend("Como cuidar da manutenção preventiva do carro?")} disabled={isTyping}>
+          🚗 Cuidados com Carro
+        </button>
+        <button className="quick-btn" onClick={() => handleSend("Guia de manutenção preventiva para moto")} disabled={isTyping}>
+          🏍️ Cuidados com Moto
+        </button>
+        <button className="quick-btn" onClick={() => handleSend("Como usar o app e lançar corridas e combustível?")} disabled={isTyping}>
+          📱 Suporte & Uso do App
+        </button>
+        <button className="quick-btn" onClick={() => handleSend("Quanto devo guardar por KM rodado para manutenção?")} disabled={isTyping}>
+          💰 Reserva por KM
+        </button>
+        <button className="quick-btn" onClick={() => handleSend("O que fazer se o motor esquentar ou sair fumaça?")} disabled={isTyping}>
+          🚨 Emergência no Motor
+        </button>
       </div>
 
       {/* Janela de Mensagens */}
@@ -207,7 +307,7 @@ const AI = () => {
       <form className="chat-input-form" onSubmit={(e) => { e.preventDefault(); handleSend(); }}>
         <input 
           type="text"
-          placeholder="Pergunte sobre seu lucro, despesas ou revisão do carro..." 
+          placeholder="Pergunte sobre manutenção do seu veículo, suporte do app ou lucros..." 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="chat-input"
