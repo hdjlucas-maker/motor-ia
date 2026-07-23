@@ -43,8 +43,13 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
 
   const overdueParts = (maintenances || []).filter(m => (m.lastKm + m.intervalKm) < currentKm);
 
-  // 1. Intenção Prioritária: Para que serve o app / Como ele ajuda o motorista
-  if (
+  // 1. INTENÇÃO PRINCIPAL: APRESENTAÇÃO DO APP MOTOR IA / PARA QUE SERVE / COMO AJUDA O MOTORISTA
+  const isAppInfoQuery = 
+    q.includes('motor ia') || 
+    q.includes('motor-ia') || 
+    q.includes('sobre o app') || 
+    q.includes('sobre esse app') || 
+    q.includes('saber mais') || 
     q.includes('serve pra que') || 
     q.includes('para que serve') || 
     q.includes('pra que serve') || 
@@ -56,8 +61,9 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
     q.includes('utilidade') || 
     q.includes('funciona como') || 
     q.includes('por que usar') ||
-    q.includes('como ajuda')
-  ) {
+    q.includes('como ajuda');
+
+  if (isAppInfoQuery) {
     return `🚗 **O Motor IA é o seu parceiro digital de trabalho para lucrar mais e não ficar na mão!**\n\n` +
            `Ele foi criado especialmente para você que roda em aplicativo (Uber, 99, iFood, Rappi, InDrive, entregas) para cuidar do seu instrumento de trabalho: **seu veículo (carro ou moto) e o dinheiro do seu bolso.**\n\n` +
            `---\n\n` +

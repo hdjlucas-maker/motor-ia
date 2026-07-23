@@ -17,8 +17,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const rawApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.AI_API_KEY;
-    const apiKey = rawApiKey ? rawApiKey.trim() : '';
+    const rawApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.AI_API_KEY || '';
+    const apiKey = rawApiKey.trim();
 
     const todayStr = new Date().toISOString().split('T')[0];
     const todayTransactions = (transactions || []).filter(t => t.date === todayStr);
@@ -33,13 +33,13 @@ export default async function handler(req, res) {
       return rem >= 0 && rem <= 1000;
     });
 
-    // Se houver chave API no Vercel (suporta tanto chaves tradicionais quanto o novo padrão "AQ." do Google AI Studio)
+    // Tenta chamada direta ao Google Gemini AI (suporta chaves AIzaSy... e o novo padrão AQ...)
     if (apiKey && apiKey.length > 5) {
       try {
         const systemPrompt = `
 Você é a Motor IA, a mais completa e inteligente assistente consultora financeira, operacional e mecânica para motoristas de carros e entregadores de motos de aplicativo (Uber, 99, Indrive, iFood, Rappi, Zé Delivery).
 
-QUANDO O USUÁRIO PERGUNTAR "PARA QUE SERVE ESTE APP?", "ESSE APP SERVE PRA QUE?", "COMO O APP ME AJUDA?":
+QUANDO O USUÁRIO PERGUNTAR SOBRE O APP, "PARA QUE SERVE ESTE APP?", "ESSE APP SERVE PRA QUE?", "SABER MAIS SOBRE O MOTOR IA", "COMO O APP ME AJUDA?":
 Responda com entusiasmo, clareza e autoridade destacando como você ajuda o motorista no dia a dia:
 1. Lucro Líquido Real (descontando combustível, alimentação e taxas do faturamento bruto).
 2. Garagem Preventiva (avisando trocas de óleo, filtros, pneus, freios e corrente da moto antes de quebrar na rua).
@@ -90,12 +90,11 @@ TELEMETRIA ATUAL DO MOTORISTA:
 - Peças Próximas de Trocar: ${urgent.map(p => p.name).join(', ') || 'Nenhuma'}
         `;
 
-        // Suporte aos modelos mais recentes do Google Gemini (incluindo 2.5-flash, 2.0-flash e 1.5-flash)
-        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro'];
+        const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
         
         for (const model of models) {
           try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
             const apiResponse = await fetch(url, {
               method: 'POST',
               headers: { 
@@ -126,7 +125,7 @@ TELEMETRIA ATUAL DO MOTORISTA:
       }
     }
 
-    // Engine Local Serverless com FAQ Completo de Manutenção de Carro & Moto e Suporte
+    // Engine Local Serverless com Resposta Inteligente Contextualizada
     const reply = generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent });
     return res.status(200).json({ reply });
 
@@ -141,8 +140,13 @@ TELEMETRIA ATUAL DO MOTORISTA:
 function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent }) {
   const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  // 1. INTENÇÃO PRINCIPAL: PARA QUE SERVE O APP / COMO ELE AJUDA O MOTORISTA
-  if (
+  // 1. INTENÇÃO PRINCIPAL: APRESENTAÇÃO DO APP MOTOR IA / PARA QUE SERVE / COMO AJUDA O MOTORISTA
+  const isAppInfoQuery = 
+    q.includes('motor ia') || 
+    q.includes('motor-ia') || 
+    q.includes('sobre o app') || 
+    q.includes('sobre esse app') || 
+    q.includes('saber mais') || 
     q.includes('serve pra que') || 
     q.includes('para que serve') || 
     q.includes('pra que serve') || 
@@ -154,8 +158,9 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
     q.includes('utilidade') || 
     q.includes('funciona como') || 
     q.includes('por que usar') ||
-    q.includes('como ajuda')
-  ) {
+    q.includes('como ajuda');
+
+  if (isAppInfoQuery) {
     return `🚗 **O Motor IA é o seu parceiro digital de trabalho para lucrar mais e não ficar na mão!**\n\n` +
            `Ele foi criado especialmente para você que roda em aplicativo (Uber, 99, iFood, Rappi, InDrive, entregas) para cuidar do seu instrumento de trabalho: **seu veículo (carro ou moto) e o dinheiro do seu bolso.**\n\n` +
            `---\n\n` +
@@ -179,7 +184,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `• **Aba Motor IA:** Tire qualquer dúvida sobre manutenção ou finanças!`;
   }
 
-  // 2. Fora do escopo
+  // 2. FORA DO ESCOPO
   const offTopicKeywords = ['pao', 'bolo', 'futebol', 'jogo', 'politica', 'medicina', 'filme', 'musica', 'piada', 'namorad', 'receita'];
   if (offTopicKeywords.some(kw => q.includes(kw))) {
     return "Posso ajudar apenas com assuntos relacionados ao Motor IA, finanças e manutenção do seu veículo (carro ou moto) de trabalho. Se tiver dúvidas sobre faturamento, peças ou como usar o app, pode perguntar!";
@@ -200,8 +205,9 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `4. Aguarde o motor esfriar totalmente (30 a 45 minutos) antes de verificar o reservatório de água desmineralizada + aditivo.`;
   }
 
-  // 4. FAQ DE MOTO (Corrente, Relação, Óleo 4T, Pneus, Entregas)
-  if (q.includes('moto') || q.includes('corrente') || q.includes('relacao') || q.includes('pinhao') || q.includes('coroa') || q.includes('oleo 4t')) {
+  // 4. FAQ DE MOTO (Apenas palavra exata 'moto'/'motos', 'corrente', 'relacao', 'pinhao', 'coroa', 'oleo 4t' - Evitando confundir com 'motor')
+  const isMotoQuery = /\bmotos?\b/.test(q) || q.includes('corrente') || q.includes('relacao') || q.includes('pinhao') || q.includes('coroa') || q.includes('oleo 4t');
+  if (isMotoQuery) {
     return `🏍️ **Guia Básico de Manutenção Preventiva para Motos (iFood / Rappi / Uber Flash):**\n\n` +
            `1. **Kit Relação & Corrente:**\n` +
            `   • Lubrifique a corrente a cada **500 KM** (ou imediatamente após rodar na chuva) com óleo 90 ou spray lubrificante.\n` +
