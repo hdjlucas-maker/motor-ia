@@ -1,12 +1,12 @@
 {
-	"name": "motor-ia",
-	"compatibility_date": "2026-07-23",
-	"pages_build_output_dir": "dist",
-	"kv_namespaces": [
-		{
-			"binding": "SUBSCRIPTIONS",
-			"id": "43bff39aca584401951aa0ba6a31b51b",
-			"remote": true
-		}
-	]
+  "name": "motor-ia",
+  "compatibility_date": "2026-07-23",
+  "pages_build_output_dir": "dist",
+  "kv_namespaces": [
+    { "binding": "SUBSCRIPTIONS", "id": "43bff39aca584401951aa0ba6a31b51b" }
+  ],
+  "vars": {
+    "INFINITEPAY_HANDLE": "servicoslucas",
+    "APP_BASE_URL": "https://motor-ia.hdjlucas.workers.dev"
+  }
 }
