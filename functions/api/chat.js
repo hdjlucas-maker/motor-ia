@@ -1,40 +1,43 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+export async function onRequestOptions() {
+  return new Response(null, { status: 200, headers: CORS_HEADERS });
+}
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
 
   try {
-    const body = req.body || {};
+    const body = await request.json().catch(() => ({}));
     const { userQuery, transactions = [], currentKm = 0, maintenances = [], vehicleProfile = {} } = body;
 
     if (!userQuery || typeof userQuery !== 'string' || !userQuery.trim()) {
-      return res.status(200).json({ 
-        reply: "Olá! Sou a Motor IA, sua consultora pessoal de manutenção (carro e moto) e finanças. Como posso te ajudar hoje?" 
+      return jsonResponse({
+        reply: "Olá! Sou a Motor IA, sua consultora pessoal de manutenção (carro e moto) e finanças. Como posso te ajudar hoje?"
       });
     }
 
-    const rawApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.AI_API_KEY || '';
+    const rawApiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.AI_API_KEY || '';
     const apiKey = rawApiKey.trim();
 
-    // COMANDO DE DIAGNÓSTICO: Permite ao usuário testar se a chave foi injetada no Vercel
     const qLower = userQuery.toLowerCase();
     if (qLower.includes('status da ia') || qLower.includes('status da api') || qLower.includes('teste de chave')) {
       const hasKey = Boolean(apiKey && apiKey.length > 5);
       const keyPrefix = hasKey ? apiKey.substring(0, 4) + '...' : 'Nenhuma';
-      return res.status(200).json({ 
-        reply: hasKey 
-          ? `🟢 **Servidor Vercel Conectado com Sucesso!**\n\n` +
-            `• Variável de Ambiente: **GEMINI_API_KEY ativa no Vercel**\n` +
+      return jsonResponse({
+        reply: hasKey
+          ? `🟢 **Servidor Cloudflare Conectado com Sucesso!**\n\n` +
+            `• Variável de Ambiente: **GEMINI_API_KEY ativa no Cloudflare Pages**\n` +
             `• Prefixo da Chave: **${keyPrefix}**\n` +
-            `• Modelo Alvo: Google Gemini 1.5/2.0 Flash\n` +
-            `• Status: O servidor serverless lê sua chave e responde dinamicamente.`
-          : `🔴 **Variável GEMINI_API_KEY não encontrada no Vercel!**\n\n` +
-            `• O servidor Vercel ainda não recebeu a variável de ambiente.\n` +
-            `• **Como resolver:** Vá em Vercel -> Settings -> Environment Variables, adicione GEMINI_API_KEY e faça um **Redeploy** na aba Deployments.`
+            `• Modelo Alvo: Google Gemini\n` +
+            `• Status: A function lê sua chave e responde dinamicamente.`
+          : `🔴 **Variável GEMINI_API_KEY não encontrada no Cloudflare!**\n\n` +
+            `• A function ainda não recebeu a variável de ambiente.\n` +
+            `• **Como resolver:** Vá em Cloudflare Pages -> Settings -> Environment Variables, adicione GEMINI_API_KEY e faça um **Redeploy** na aba Deployments.`
       });
     }
 
@@ -56,7 +59,6 @@ export default async function handler(req, res) {
     const vYear = vehicleProfile?.year || '';
     const vFuel = vehicleProfile?.fuelType || '';
 
-    // Tenta chamada direta ao Google Gemini AI (suporta chaves AIzaSy... e o novo padrão AQ...)
     if (apiKey && apiKey.length > 5) {
       try {
         const systemPrompt = `
@@ -119,13 +121,13 @@ TELEMETRIA ATUAL DO MOTORISTA:
         `;
 
         const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
-        
+
         for (const model of models) {
           try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
             const apiResponse = await fetch(url, {
               method: 'POST',
-              headers: { 
+              headers: {
                 'Content-Type': 'application/json',
                 'x-goog-api-key': apiKey
               },
@@ -138,7 +140,7 @@ TELEMETRIA ATUAL DO MOTORISTA:
               const data = await apiResponse.json();
               const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
               if (reply && reply.trim()) {
-                return res.status(200).json({ reply: reply.trim() });
+                return jsonResponse({ reply: reply.trim() });
               }
             } else {
               const errorText = await apiResponse.text();
@@ -149,43 +151,48 @@ TELEMETRIA ATUAL DO MOTORISTA:
           }
         }
       } catch (geminiErr) {
-        console.warn('Erro na chamada Gemini API no Vercel:', geminiErr);
+        console.warn('Erro na chamada Gemini API no Cloudflare:', geminiErr);
       }
     }
 
-    // Engine Local Serverless com Resposta Inteligente Contextualizada
     const reply = generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent, vehicleProfile });
-    return res.status(200).json({ reply });
+    return jsonResponse({ reply });
 
   } catch (error) {
     console.error('Erro na API Serverless:', error);
-    return res.status(200).json({ 
-      reply: "Sou a Motor IA! Estou pronta para te ajudar com seu faturamento, lucros, suporte do app e manutenção do seu carro ou moto. Pode me fazer uma pergunta!" 
+    return jsonResponse({
+      reply: "Sou a Motor IA! Estou pronta para te ajudar com seu faturamento, lucros, suporte do app e manutenção do seu carro ou moto. Pode me fazer uma pergunta!"
     });
   }
+}
+
+function jsonResponse(payload, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+  });
 }
 
 function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent, vehicleProfile }) {
   const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const isMotoVehicle = vehicleProfile?.type === 'moto';
 
-  // 1. INTENÇÃO PRINCIPAL: APRESENTAÇÃO DO APP MOTOR IA / PARA QUE SERVE / COMO AJUDA O MOTORISTA
-  const isAppInfoQuery = 
-    q.includes('motor ia') || 
-    q.includes('motor-ia') || 
-    q.includes('sobre o app') || 
-    q.includes('sobre esse app') || 
-    q.includes('saber mais') || 
-    q.includes('serve pra que') || 
-    q.includes('para que serve') || 
-    q.includes('pra que serve') || 
-    q.includes('ajuda em que') || 
-    q.includes('o que faz') || 
-    q.includes('o que e esse app') || 
-    q.includes('o que e o app') || 
-    q.includes('ajudar o motorista') || 
-    q.includes('utilidade') || 
-    q.includes('funciona como') || 
+  const isAppInfoQuery =
+    q.includes('motor ia') ||
+    q.includes('motor-ia') ||
+    q.includes('sobre o app') ||
+    q.includes('sobre esse app') ||
+    q.includes('saber mais') ||
+    q.includes('serve pra que') ||
+    q.includes('para que serve') ||
+    q.includes('pra que serve') ||
+    q.includes('ajuda em que') ||
+    q.includes('o que faz') ||
+    q.includes('o que e esse app') ||
+    q.includes('o que e o app') ||
+    q.includes('ajudar o motorista') ||
+    q.includes('utilidade') ||
+    q.includes('funciona como') ||
     q.includes('por que usar') ||
     q.includes('como ajuda');
 
@@ -213,13 +220,11 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `• **Aba Motor IA:** Tire qualquer dúvida sobre manutenção ou finanças!`;
   }
 
-  // 2. FORA DO ESCOPO
   const offTopicKeywords = ['pao', 'bolo', 'futebol', 'jogo', 'politica', 'medicina', 'filme', 'musica', 'piada', 'namorad', 'receita'];
   if (offTopicKeywords.some(kw => q.includes(kw))) {
     return "Posso ajudar apenas com assuntos relacionados ao Motor IA, finanças e manutenção do seu veículo (carro ou moto) de trabalho. Se tiver dúvidas sobre faturamento, peças ou como usar o app, pode perguntar!";
   }
 
-  // 3. EMERGÊNCIAS NA RUA
   if (q.includes('esquentando') || q.includes('fumaca') || q.includes('ferveu') || q.includes('painel acendeu') || q.includes('luz vermelha') || q.includes('luz de oleo') || q.includes('luz da injecao')) {
     if (q.includes('luz') || q.includes('painel')) {
       return `⚠️ **Guia de Luzes no Painel do Veículo:**\n\n` +
@@ -234,7 +239,6 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `4. Aguarde o motor esfriar totalmente (30 a 45 minutos) antes de verificar o reservatório de água desmineralizada + aditivo.`;
   }
 
-  // 4. FAQ DE MOTO (Apenas palavra exata 'moto'/'motos', 'corrente', 'relacao', 'pinhao', 'coroa', 'oleo 4t')
   const isMotoQuery = isMotoVehicle || /\bmotos?\b/.test(q) || q.includes('corrente') || q.includes('relacao') || q.includes('pinhao') || q.includes('coroa') || q.includes('oleo 4t');
   if (isMotoQuery && !q.includes('carro')) {
     return `🏍️ **Guia Básico de Manutenção Preventiva para Motos (iFood / Rappi / Uber Flash):**\n\n` +
@@ -249,7 +253,6 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `   • Confira a margem de desgaste das pastilhas/lonas a cada 3.000 KM.`;
   }
 
-  // 5. FAQ DE CARRO
   if (q.includes('cuidar') || q.includes('manutencao') || q.includes('veiculo') || q.includes('carro') || q.includes('radiador') || q.includes('agua') || q.includes('calibrar') || q.includes('vela') || q.includes('correia')) {
     if (q.includes('radiador') || q.includes('agua') || q.includes('aditivo')) {
       return `🌡️ **Manutenção do Radiador e Arrefecimento do Carro:**\n\n` +
@@ -277,7 +280,6 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `   • Se ouvir um chiado metálico ao pisar no freio, a pastilha gastou até o fim e está rando o disco. Substitua já!`;
   }
 
-  // 6. SUPORTE DO APP E COMO USAR
   if (q.includes('faq') || q.includes('suporte') || q.includes('duvida') || q.includes('adicion') || q.includes('cadastr') || q.includes('lancar') || q.includes('como usar') || q.includes('ajuda')) {
     return `📖 **Central de Suporte & Como Usar o Motor IA:**\n\n` +
            `• 💰 **Como lançar faturamento Uber/99?**\n` +
@@ -292,7 +294,6 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `  Separe entre **R$ 0,20 e R$ 0,30 por KM** para carros, e **R$ 0,08 a R$ 0,12 por KM** para motos numa caixinha.`;
   }
 
-  // 7. FINANÇAS, GUARDA POR KM E FLEX
   if (q.includes('reserva') || q.includes('guardar') || q.includes('custo por km') || q.includes('etanol') || q.includes('gasolina')) {
     if (q.includes('etanol') || q.includes('gasolina') || q.includes('flex')) {
       return `⛽ **Cálculo de Combustível Flex (Etanol vs Gasolina):**\n\n` +
@@ -306,7 +307,6 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `💡 Guarde esse dinheiro diariamente numa conta rendendo 100% do CDI. Assim você paga pneus, óleo e revisões sem juros!`;
   }
 
-  // 8. Ganhos e Lucro
   if (q.includes('hoje') || q.includes('ganhei') || q.includes('lucro') || q.includes('faturei') || q.includes('quanto fiz')) {
     return `📊 **Resumo Financeiro de Hoje:**\n\n` +
            `• Faturamento Bruto: **R$ ${todayGross.toFixed(2)}**\n` +
@@ -315,7 +315,6 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            (todayGross === 0 ? "💡 Registre suas corridas de hoje na aba **Finanças**!" : "🔥 Bom trabalho! Mantenha suas despesas controladas.");
   }
 
-  // 9. Garagem
   if (q.includes('garagem') || q.includes('peca') || q.includes('oleo') || q.includes('pneu') || q.includes('freio') || q.includes('vencid')) {
     if (overdue.length > 0) {
       return `🚨 **ATENÇÃO: Peças VENCIDAS na Garagem!**\n` +
@@ -325,17 +324,15 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
     return `✅ **Sua garagem está 100% em dia!** Odômetro atual: **${currentKm.toLocaleString('pt-BR')} KM**.`;
   }
 
-  // 10. Saudações
   if (q.includes('oi') || q.includes('ola') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite')) {
     return `Olá! Sou a Motor IA, sua consultora pessoal de manutenção (carro e moto) e finanças para motorista.\n\n` +
            `Como posso te ajudar agora? Pode me perguntar para que serve o app, dicas de manutenção, como cuidar do radiador ou quanto você lucrou hoje!`;
   }
 
-  // 11. Resposta Padrão Guiada
   return `Sou a Motor IA, sua consultora de faturamento, manutenção e suporte!\n\n` +
          `💡 **Respostas Rápidas & Central de FAQ:**\n` +
          `• Digite **"para que serve o app"** para entender como a IA te ajuda a lucrar mais.\n` +
-         `• Digite **"status da ia"** para verificar a conexão do servidor Vercel com a chave Gemini.\n` +
+         `• Digite **"status da ia"** para verificar a conexão do servidor Cloudflare com a chave Gemini.\n` +
          `• Digite **"como cuidar do carro"** para ver o guia de manutenção preventiva.\n` +
          `• Digite **"manutenção de moto"** para ver os cuidados com corrente e óleo 4T.\n` +
          `• Digite **"como usar o app"** para aprender a lançar corridas, despesas e usar a Garagem.\n\n` +
