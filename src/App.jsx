@@ -6,6 +6,8 @@ import Financial from './pages/Financial/Financial';
 import AI from './pages/AI/AI';
 import Reports from './pages/Reports/Reports';
 import Auth from './pages/Auth/Auth';
+import Subscription from './pages/Subscription/Subscription';
+import RequireSubscription from './components/Auth/RequireSubscription';
 
 function App() {
   return (
@@ -15,11 +17,13 @@ function App() {
         
         {/* Protected Routes (Wrapper in Layout) */}
         <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="garage" element={<Garage />} />
-          <Route path="financial" element={<Financial />} />
-          <Route path="ai" element={<AI />} />
-          <Route path="reports" element={<Reports />} />
+          <Route index element={<RequireSubscription><Dashboard /></RequireSubscription>} />
+          <Route path="garage" element={<RequireSubscription><Garage /></RequireSubscription>} />
+          <Route path="financial" element={<RequireSubscription><Financial /></RequireSubscription>} />
+          <Route path="ai" element={<RequireSubscription><AI /></RequireSubscription>} />
+          <Route path="reports" element={<RequireSubscription><Reports /></RequireSubscription>} />
+          {/* Não é protegida pelo guard: precisa estar acessível mesmo com o teste expirado */}
+          <Route path="subscription" element={<Subscription />} />
         </Route>
         
         <Route path="*" element={<Navigate to="/" replace />} />
