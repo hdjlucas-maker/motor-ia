@@ -8,6 +8,43 @@
   padding-top: env(safe-area-inset-top);
   margin-top: 10px;
   gap: 8px;
+  max-width: 600px; /* Mesma largura do conteúdo (.page-content), pra não ficar espalhado em telas largas */
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-plan-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.header-plan-badge-trial {
+  background: rgba(245, 166, 35, 0.12);
+  color: var(--warning);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+}
+
+.header-plan-badge-active {
+  background: rgba(5, 163, 87, 0.12);
+  color: var(--success);
+  border: 1px solid rgba(5, 163, 87, 0.3);
 }
 
 .header-title {
@@ -54,22 +91,35 @@
 }
 
 .reset-btn {
-  background: rgba(225, 25, 0, 0.15);
+  background: rgba(225, 25, 0, 0.1);
   color: var(--danger);
-  border: 1px solid rgba(225, 25, 0, 0.3);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  border: 1px solid rgba(225, 25, 0, 0.25);
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 5px;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reset-btn span {
+  display: none; /* Em telas estreitas (mobile), mostra só o ícone pra economizar espaço */
+}
+
+@media (min-width: 420px) {
+  .reset-btn span {
+    display: inline;
+  }
 }
 
 .reset-btn:hover {
   background: var(--danger);
   color: white;
-  transform: rotate(-30deg);
+  border-color: var(--danger);
 }

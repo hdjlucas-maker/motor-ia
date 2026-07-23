@@ -1,13 +1,15 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { RotateCcw, Car, Bike, User, Settings } from 'lucide-react';
+import { Outlet, Link } from 'react-router-dom';
+import { RotateCcw, Car, Bike, Settings, Clock, Crown } from 'lucide-react';
 import BottomNav from './BottomNav';
 import VehicleModal from '../Onboarding/VehicleModal';
 import { useUser } from '../../context/UserContext';
+import { useSubscription } from '../../hooks/useSubscription';
 import './Layout.css';
 
 const Layout = () => {
   const { user, vehicleProfile, setShowVehicleModal } = useUser();
+  const { status, daysLeft } = useSubscription(user?.id);
 
   const handleResetData = () => {
     const confirmMessage = "⚠️ ATENÇÃO: Esta ação apagará os dados locais salvos. Deseja redefinir os lançamentos?";
@@ -36,13 +38,29 @@ const Layout = () => {
           <Settings size={14} className="badge-edit-icon" />
         </div>
 
-        <button 
-          className="reset-btn" 
-          title="Zerar dados locais"
-          onClick={handleResetData}
-        >
-          <RotateCcw size={18} />
-        </button>
+        <div className="header-actions">
+          {status === 'trial' && (
+            <Link to="/subscription" className="header-plan-badge header-plan-badge-trial" title="Ver planos de assinatura">
+              <Clock size={14} />
+              <span>{daysLeft}d grátis</span>
+            </Link>
+          )}
+          {status === 'active' && (
+            <Link to="/subscription" className="header-plan-badge header-plan-badge-active" title="Gerenciar assinatura">
+              <Crown size={14} />
+              <span>Premium</span>
+            </Link>
+          )}
+
+          <button
+            className="reset-btn"
+            title="Apaga todos os dados salvos neste navegador (finanças, garagem, veículo)"
+            onClick={handleResetData}
+          >
+            <RotateCcw size={16} />
+            <span>Zerar dados</span>
+          </button>
+        </div>
       </header>
 
       {/* Modal Global de Cadastro/Edição de Veículo */}
