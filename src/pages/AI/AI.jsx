@@ -259,6 +259,9 @@ const AI = () => {
 
       {/* Sugestões Rápidas de Atalho */}
       <div className="quick-questions">
+        <button className="quick-btn highlighted" onClick={() => handleSend("Para que serve este aplicativo e como ele me ajuda?")} disabled={isTyping}>
+          ❓ Para que serve o app?
+        </button>
         <button className="quick-btn" onClick={() => handleSend("Como cuidar da manutenção preventiva do carro?")} disabled={isTyping}>
           🚗 Cuidados com Carro
         </button>

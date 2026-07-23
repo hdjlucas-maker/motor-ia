@@ -38,7 +38,13 @@ export default async function handler(req, res) {
         const systemPrompt = `
 Você é a Motor IA, a mais completa e inteligente assistente consultora financeira, operacional e mecânica para motoristas de carros e entregadores de motos de aplicativo (Uber, 99, Indrive, iFood, Rappi, Zé Delivery).
 
-Você é responsável pela Central de FAQ, Suporte ao Usuário e Consultoria Técnica do Aplicativo Motor IA.
+QUANDO O USUÁRIO PERGUNTAR "PARA QUE SERVE ESTE APP?", "ESSE APP SERVE PRA QUE?", "COMO O APP ME AJUDA?":
+Responda com entusiasmo, clareza e autoridade destacando como você ajuda o motorista no dia a dia:
+1. Lucro Líquido Real (descontando combustível, alimentação e taxas do faturamento bruto).
+2. Garagem Preventiva (avisando trocas de óleo, filtros, pneus, freios e corrente da moto antes de quebrar na rua).
+3. Reserva Financeira por KM (sabendo quanto guardar por KM rodado para não passar sufoco).
+4. Socorro & Consultoria Mecânica na Rua (instruções para motor esquentando, luzes do painel e ruídos).
+5. Relatórios em Excel/PDF para controle financeiro total.
 
 SEUS CONHECIMENTOS PRINCIPAIS:
 1. MANUTENÇÃO PREVENTIVA DE CARRO:
@@ -127,13 +133,51 @@ TELEMETRIA ATUAL DO MOTORISTA:
 function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayExpenses, currentKm, overdue, urgent }) {
   const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  // 1. Fora do escopo
+  // 1. INTENÇÃO PRINCIPAL: PARA QUE SERVE O APP / COMO ELE AJUDA O MOTORISTA
+  if (
+    q.includes('serve pra que') || 
+    q.includes('para que serve') || 
+    q.includes('pra que serve') || 
+    q.includes('ajuda em que') || 
+    q.includes('o que faz') || 
+    q.includes('o que e esse app') || 
+    q.includes('o que e o app') || 
+    q.includes('ajudar o motorista') || 
+    q.includes('utilidade') || 
+    q.includes('funciona como') || 
+    q.includes('por que usar') ||
+    q.includes('como ajuda')
+  ) {
+    return `🚗 **O Motor IA é o seu parceiro digital de trabalho para lucrar mais e não ficar na mão!**\n\n` +
+           `Ele foi criado especialmente para você que roda em aplicativo (Uber, 99, iFood, Rappi, InDrive, entregas) para cuidar do seu instrumento de trabalho: **seu veículo (carro ou moto) e o dinheiro do seu bolso.**\n\n` +
+           `---\n\n` +
+           `### 💡 **Como o Motor IA ajuda você no dia a dia:**\n\n` +
+           `1. 💰 **Lucro Líquido Real (Dinheiro de Verdade):**\n` +
+           `   • O app desconta seus custos de combustível, alimentação e taxas do faturamento bruto da Uber/99.\n` +
+           `   • Você descobre na hora quanto REALMENTE sobrou no seu bolso sem se enganar!\n\n` +
+           `2. 🛠️ **Garagem Preventiva (Evita Quebrar na Rua):**\n` +
+           `   • Acompanha seu odômetro (**${currentKm.toLocaleString('pt-BR')} KM**) e te avisa ANTES de vencerem o **óleo, filtros, pneus, freios ou corrente da moto**.\n` +
+           `   • Evita prejuízos gigantes de motor fundido ou ficar parado na pista esperando guincho.\n\n` +
+           `3. 💵 **Reserva Financeira por KM (Caixinha de Peças):**\n` +
+           `   • Calcula exatamente quanto guardar por KM rodado (ex: R$ 0,20/km para carro; R$ 0,10/km para moto) para pagar revisões sem sufoco no cartão.\n\n` +
+           `4. 🚨 **Socorro & Consultoria Mecânica na Rua:**\n` +
+           `   • Se o motor esquentar, sair fumaça, o carro falhar ou acender luz no painel, a IA te orienta na hora sobre o que fazer com segurança.\n\n` +
+           `5. 📊 **Relatórios em Excel e PDF:**\n` +
+           `   • Exporte planilhas completas dos seus ganhos e custos para ter controle financeiro total.\n\n` +
+           `---\n\n` +
+           `👉 **Por onde começar:**\n` +
+           `• **Aba Finanças:** Lance seus ganhos e abastecimentos do dia.\n` +
+           `• **Aba Garagem:** Atualize a quilometragem do seu odômetro.\n` +
+           `• **Aba Motor IA:** Tire qualquer dúvida sobre manutenção ou finanças!`;
+  }
+
+  // 2. Fora do escopo
   const offTopicKeywords = ['pao', 'bolo', 'futebol', 'jogo', 'politica', 'medicina', 'filme', 'musica', 'piada', 'namorad', 'receita'];
   if (offTopicKeywords.some(kw => q.includes(kw))) {
     return "Posso ajudar apenas com assuntos relacionados ao Motor IA, finanças e manutenção do seu veículo (carro ou moto) de trabalho. Se tiver dúvidas sobre faturamento, peças ou como usar o app, pode perguntar!";
   }
 
-  // 2. EMERGÊNCIAS NA RUA
+  // 3. EMERGÊNCIAS NA RUA
   if (q.includes('esquentando') || q.includes('fumaca') || q.includes('ferveu') || q.includes('painel acendeu') || q.includes('luz vermelha') || q.includes('luz de oleo') || q.includes('luz da injecao')) {
     if (q.includes('luz') || q.includes('painel')) {
       return `⚠️ **Guia de Luzes no Painel do Veículo:**\n\n` +
@@ -148,7 +192,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `4. Aguarde o motor esfriar totalmente (30 a 45 minutos) antes de verificar o reservatório de água desmineralizada + aditivo.`;
   }
 
-  // 3. FAQ DE MOTO (Corrente, Relação, Óleo 4T, Pneus, Entregas)
+  // 4. FAQ DE MOTO (Corrente, Relação, Óleo 4T, Pneus, Entregas)
   if (q.includes('moto') || q.includes('corrente') || q.includes('relacao') || q.includes('pinhao') || q.includes('coroa') || q.includes('oleo 4t')) {
     return `🏍️ **Guia Básico de Manutenção Preventiva para Motos (iFood / Rappi / Uber Flash):**\n\n` +
            `1. **Kit Relação & Corrente:**\n` +
@@ -162,7 +206,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `   • Confira a margem de desgaste das pastilhas/lonas a cada 3.000 KM.`;
   }
 
-  // 4. FAQ DE CARRO (Óleo, Filtros, Arrefecimento/Radiador, Pneus, Freios, Correia, Velas)
+  // 5. FAQ DE CARRO (Óleo, Filtros, Arrefecimento/Radiador, Pneus, Freios, Correia, Velas)
   if (q.includes('cuidar') || q.includes('manutencao') || q.includes('veiculo') || q.includes('carro') || q.includes('radiador') || q.includes('agua') || q.includes('calibrar') || q.includes('vela') || q.includes('correia')) {
     if (q.includes('radiador') || q.includes('agua') || q.includes('aditivo')) {
       return `🌡️ **Manutenção do Radiador e Arrefecimento do Carro:**\n\n` +
@@ -190,7 +234,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `   • Se ouvir um chiado metálico ao pisar no freio, a pastilha gastou até o fim e está rando o disco. Substitua já!`;
   }
 
-  // 5. SUPORTE DO APP E COMO USAR (Ganhos, Gastos, Garagem, Relatórios, Reserva)
+  // 6. SUPORTE DO APP E COMO USAR (Ganhos, Gastos, Garagem, Relatórios, Reserva)
   if (q.includes('faq') || q.includes('suporte') || q.includes('duvida') || q.includes('adicion') || q.includes('cadastr') || q.includes('lancar') || q.includes('como usar') || q.includes('ajuda')) {
     return `📖 **Central de Suporte & Como Usar o Motor IA:**\n\n` +
            `• 💰 **Como lançar faturamento Uber/99?**\n` +
@@ -205,7 +249,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `  Separe entre **R$ 0,20 e R$ 0,30 por KM** para carros, e **R$ 0,08 a R$ 0,12 por KM** para motos numa caixinha.`;
   }
 
-  // 6. FINANÇAS, GUARDA POR KM E FLEX
+  // 7. FINANÇAS, GUARDA POR KM E FLEX
   if (q.includes('reserva') || q.includes('guardar') || q.includes('custo por km') || q.includes('etanol') || q.includes('gasolina')) {
     if (q.includes('etanol') || q.includes('gasolina') || q.includes('flex')) {
       return `⛽ **Cálculo de Combustível Flex (Etanol vs Gasolina):**\n\n` +
@@ -219,7 +263,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            `💡 Guarde esse dinheiro diariamente numa conta rendendo 100% do CDI. Assim você paga pneus, óleo e revisões sem juros!`;
   }
 
-  // 7. Ganhos e Lucro
+  // 8. Ganhos e Lucro
   if (q.includes('hoje') || q.includes('ganhei') || q.includes('lucro') || q.includes('faturei') || q.includes('quanto fiz')) {
     return `📊 **Resumo Financeiro de Hoje:**\n\n` +
            `• Faturamento Bruto: **R$ ${todayGross.toFixed(2)}**\n` +
@@ -228,7 +272,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
            (todayGross === 0 ? "💡 Registre suas corridas de hoje na aba **Finanças**!" : "🔥 Bom trabalho! Mantenha suas despesas controladas.");
   }
 
-  // 8. Garagem
+  // 9. Garagem
   if (q.includes('garagem') || q.includes('peca') || q.includes('oleo') || q.includes('pneu') || q.includes('freio') || q.includes('vencid')) {
     if (overdue.length > 0) {
       return `🚨 **ATENÇÃO: Peças VENCIDAS na Garagem!**\n` +
@@ -238,15 +282,16 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
     return `✅ **Sua garagem está 100% em dia!** Odômetro atual: **${currentKm.toLocaleString('pt-BR')} KM**.`;
   }
 
-  // 9. Saudações
+  // 10. Saudações
   if (q.includes('oi') || q.includes('ola') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite')) {
     return `Olá! Sou a Motor IA, sua consultora pessoal de manutenção (carro e moto) e finanças para motorista.\n\n` +
-           `Como posso te ajudar agora? Pode me perguntar sobre dicas de manutenção, como cuidar do radiador, da relação da moto, suporte do aplicativo ou quanto você lucrou hoje!`;
+           `Como posso te ajudar agora? Pode me perguntar para que serve o app, dicas de manutenção, como cuidar do radiador ou quanto você lucrou hoje!`;
   }
 
-  // 10. Resposta Padrão Guiada
+  // 11. Resposta Padrão Guiada
   return `Sou a Motor IA, sua consultora de faturamento, manutenção e suporte!\n\n` +
          `💡 **Respostas Rápidas & Central de FAQ:**\n` +
+         `• Digite **"para que serve o app"** para entender como a IA te ajuda a lucrar mais.\n` +
          `• Digite **"como cuidar do carro"** para ver o guia de manutenção preventiva.\n` +
          `• Digite **"manutenção de moto"** para ver os cuidados com corrente e óleo 4T.\n` +
          `• Digite **"como usar o app"** para aprender a lançar corridas, despesas e usar a Garagem.\n` +

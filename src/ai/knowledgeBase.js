@@ -5,6 +5,12 @@
 
 export const MAINTENANCE_FAQ_CATEGORIES = [
   {
+    id: 'app',
+    title: '📱 Suporte & Propósito do App',
+    icon: 'HelpCircle',
+    description: 'Para que serve o Motor IA, como ele ajuda o motorista e como usar.'
+  },
+  {
     id: 'carro',
     title: '🚗 Manutenção de Carro',
     icon: 'Car',
@@ -15,12 +21,6 @@ export const MAINTENANCE_FAQ_CATEGORIES = [
     title: '🏍️ Manutenção de Moto',
     icon: 'Bike',
     description: 'Kit relação, lubrificação de corrente, óleo 4T e pneus.'
-  },
-  {
-    id: 'app',
-    title: '📱 Suporte & Uso do App',
-    icon: 'HelpCircle',
-    description: 'Como lançar corridas, despesas, usar a Garagem e ver lucros.'
   },
   {
     id: 'financas',
@@ -37,6 +37,82 @@ export const MAINTENANCE_FAQ_CATEGORIES = [
 ];
 
 export const FAQ_ITEMS = [
+  // --- PROPÓSITO DO APP & SUPORTE ---
+  {
+    id: 'app-proposito',
+    category: 'app',
+    question: 'Para que serve este aplicativo e como ele ajuda o motorista?',
+    keywords: ['serve pra que', 'para que serve', 'ajuda em que', 'o que faz', 'sobre o app', 'motivo', 'utilidade', 'como ajuda'],
+    answer: `🚗 **O Motor IA é o seu parceiro digital de trabalho para lucrar mais e não ficar na mão!**\n\n` +
+            `Ele foi criado especialmente para você que roda em aplicativo (Uber, 99, iFood, Rappi, InDrive, entregas) para cuidar do seu instrumento de trabalho: **seu veículo (carro ou moto) e o dinheiro do seu bolso.**\n\n` +
+            `---\n\n` +
+            `### 💡 **Como o Motor IA ajuda você no dia a dia:**\n\n` +
+            `1. 💰 **Lucro Líquido Real (Dinheiro de Verdade):**\n` +
+            `   • O app desconta seus custos de combustível, alimentação e taxas do faturamento bruto da Uber/99.\n` +
+            `   • Você descobre na hora quanto REALMENTE sobrou no seu bolso!\n\n` +
+            `2. 🛠️ **Garagem Preventiva (Evita Quebrar na Rua):**\n` +
+            `   • Acompanha seu odômetro e te avisa ANTES de vencerem o **óleo, filtros, pneus, freios ou corrente da moto**.\n` +
+            `   • Evita prejuízos gigantes de motor fundido ou ficar na pista esperando guincho.\n\n` +
+            `3. 💵 **Reserva Financeira por KM (Caixinha de Peças):**\n` +
+            `   • Mostra exatamente quanto guardar por KM rodado (ex: R$ 0,20/km para carro; R$ 0,10/km para moto) para pagar revisões sem sufoco.\n\n` +
+            `4. 🚨 **Socorro & Consultoria Mecânica na Rua:**\n` +
+            `   • Se o motor esquentar, sair fumaça ou acender luz no painel, a IA te orienta na hora sobre o que fazer com segurança.\n\n` +
+            `5. 📊 **Relatórios em Excel e PDF:**\n` +
+            `   • Exporte planilhas completas de ganhos e custos para ter controle financeiro total.\n\n` +
+            `---\n\n` +
+            `👉 **Por onde começar no app:**\n` +
+            `• **Aba Finanças:** Lance suas corridas e abastecimentos do dia.\n` +
+            `• **Aba Garagem:** Informe a quilometragem atual do seu odômetro.\n` +
+            `• **Aba Motor IA:** Tire qualquer dúvida sobre mecânica, economia ou finanças!`
+  },
+  {
+    id: 'app-lancamento-ganhos',
+    category: 'app',
+    question: 'Como lançar meus ganhos da Uber, 99 ou entregas no app?',
+    keywords: ['lancar ganho', 'cadastrar corrida', 'adicionar dinheiro', 'uber', '99', 'ifood'],
+    answer: `📱 **Como Lançar Seus Ganhos:**\n\n` +
+            `1. Acesse a aba **Finanças** no menu inferior.\n` +
+            `2. Clique na aba **"Lançar Ganho"**.\n` +
+            `3. Digite o valor recebido das suas corridas ou entregas do dia.\n` +
+            `4. Escolha a categoria (ex: Uber, 99, Particular, Entregas) e a data.\n` +
+            `5. Toque em **Salvar**.\n\n` +
+            `💡 O dashboard atualiza na hora calculando seu **Lucro Líquido Real**!`
+  },
+  {
+    id: 'app-lancamento-despesas',
+    category: 'app',
+    question: 'Como registrar gastos com combustível, comida e oficina?',
+    keywords: ['lancar despesa', 'gasolina', 'combustivel', 'comida', 'oficina', 'gasto'],
+    answer: `⛽ **Como Registrar Suas Despesas:**\n\n` +
+            `1. Vá até a aba **Finanças**.\n` +
+            `2. Escolha **"Lançar Despesa"**.\n` +
+            `3. Insira o valor do gasto.\n` +
+            `4. Selecione o tipo de despesa (Combustível, Alimentação, Manutenção, Lavagem, Pedágio).\n` +
+            `5. Clique em **Salvar** para abater esse valor do seu lucro do dia.`
+  },
+  {
+    id: 'app-garagem',
+    category: 'app',
+    question: 'Como utilizar a aba Garagem para controlar peças e óleo?',
+    keywords: ['garagem', 'odometro', 'km', 'cadastrar peca', 'renovar peca'],
+    answer: `🛠️ **Como Funciona a Garagem Preventiva:**\n\n` +
+            `1. Acesse a aba **Garagem**.\n` +
+            `2. Atualize a quilometragem do seu **Odômetro Atual**.\n` +
+            `3. O Motor IA calcula automaticamente o prazo de troca de cada componente (Óleo, Filtros, Pneus, Velas, Freios).\n` +
+            `4. Quando fizer uma manutenção no mecânico, clique em **"Renovar"** ao lado da peça para zerar a contagem!`
+  },
+  {
+    id: 'app-relatorios',
+    category: 'app',
+    question: 'Como exportar meus dados financeiros para Excel ou PDF?',
+    keywords: ['relatorio', 'excel', 'pdf', 'exportar', 'baixar planilha'],
+    answer: `📊 **Como Exportar Relatórios Completo:**\n\n` +
+            `1. Vá na aba **Relatórios** no menu inferior.\n` +
+            `2. Escolha o período desejado (Hoje, Esta Semana, Este Mês ou Personalizado).\n` +
+            `3. Clique no botão **"Baixar Excel (.xlsx)"** ou **"Imprimir PDF"**.\n` +
+            `4. Você terá uma planilha formatada com receitas, custos por KM e margem de lucro!`
+  },
+
   // --- CARROS ---
   {
     id: 'carro-oleo',
@@ -101,7 +177,7 @@ export const FAQ_ITEMS = [
             `• **Lubrificação:** Lubrifique a corrente a cada **500 KM** ou **imediatamente após rodar na chuva** (use óleo 90 ou spray para corrente).\n` +
             `• **Folga Correta:** Mantenha a folga entre **2 cm e 3 cm**.\n` +
             `  - Corrente muito folgada: pode escapar e travar a roda traseira (risco de queda grave).\n` +
-            `  - Corrente muito esticada: força os rolamentos da roda e do câmbio.\n` +
+            `  - Corrente muito esticada: força os rolamentos da roda e da transmissão.\n` +
             `• **Substituição:** Se os dentes da coroa/pinhão estiverem finos ou curvados (estilo "dente de tubarão"), troque o kit completo!`
   },
   {
@@ -123,55 +199,6 @@ export const FAQ_ITEMS = [
             `• **Calibragem:** Calibre semanalmente. Pneu murcho tira a estabilidade em curvas e causa derrapagens.\n` +
             `• **Pastilhas e Lonas:** Verifique a marca de desgaste no espelho do freio a cada **3.000 KM**.\n` +
             `• **Cabos de Freio e Embreagem:** Mantenha os cabos regulados e lubrificados para não arrebentarem durante o expediente.`
-  },
-
-  // --- SUPORTE E USO DO APP ---
-  {
-    id: 'app-lancamento-ganhos',
-    category: 'app',
-    question: 'Como lançar meus ganhos da Uber, 99 ou entregas no app?',
-    keywords: ['lancar ganho', 'cadastrar corrida', 'adicionar dinheiro', 'uber', '99', 'ifood'],
-    answer: `📱 **Como Lançar Seus Ganhos:**\n\n` +
-            `1. Acesse a aba **Finanças** no menu inferior.\n` +
-            `2. Clique na aba **"Lançar Ganho"**.\n` +
-            `3. Digite o valor recebido das suas corridas ou entregas do dia.\n` +
-            `4. Escolha a categoria (ex: Uber, 99, Particular, Entregas) e a data.\n` +
-            `5. Toque em **Salvar**.\n\n` +
-            `💡 O dashboard atualiza na hora calculando seu **Lucro Líquido Real**!`
-  },
-  {
-    id: 'app-lancamento-despesas',
-    category: 'app',
-    question: 'Como registrar gastos com combustível, comida e oficina?',
-    keywords: ['lancar despesa', 'gasolina', 'combustivel', 'comida', 'oficina', 'gasto'],
-    answer: `⛽ **Como Registrar Suas Despesas:**\n\n` +
-            `1. Vá até a aba **Finanças**.\n` +
-            `2. Escolha **"Lançar Despesa"**.\n` +
-            `3. Insira o valor do gasto.\n` +
-            `4. Selecione o tipo de despesa (Combustível, Alimentação, Manutenção, Lavagem, Pedágio).\n` +
-            `5. Clique em **Salvar** para abater esse valor do seu lucro do dia.`
-  },
-  {
-    id: 'app-garagem',
-    category: 'app',
-    question: 'Como utilizar a aba Garagem para controlar peças e óleo?',
-    keywords: ['garagem', 'odometro', 'km', 'cadastrar peca', 'renovar peca'],
-    answer: `🛠️ **Como Funciona a Garagem Preventiva:**\n\n` +
-            `1. Acesse a aba **Garagem**.\n` +
-            `2. Atualize a quilometragem do seu **Odômetro Atual**.\n` +
-            `3. O Motor IA calcula automaticamente o prazo de troca de cada componente (Óleo, Filtros, Pneus, Velas, Freios).\n` +
-            `4. Quando fizer uma manutenção no mecânico, clique em **"Renovar"** ao lado da peça para zerar a contagem!`
-  },
-  {
-    id: 'app-relatorios',
-    category: 'app',
-    question: 'Como exportar meus dados financeiros para Excel ou PDF?',
-    keywords: ['relatorio', 'excel', 'pdf', 'exportar', 'baixar planilha'],
-    answer: `📊 **Como Exportar Relatórios Completo:**\n\n` +
-            `1. Vá na aba **Relatórios** no menu inferior.\n` +
-            `2. Escolha o período desejado (Hoje, Esta Semana, Este Mês ou Personalizado).\n` +
-            `3. Clique no botão **"Baixar Excel (.xlsx)"** ou **"Imprimir PDF"**.\n` +
-            `4. Você terá uma planilha formatada com receitas, custos por KM e margem de lucro!`
   },
 
   // --- FINANÇAS E CUSTO POR KM ---

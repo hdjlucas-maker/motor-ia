@@ -43,6 +43,44 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
 
   const overdueParts = (maintenances || []).filter(m => (m.lastKm + m.intervalKm) < currentKm);
 
+  // 1. Intenção Prioritária: Para que serve o app / Como ele ajuda o motorista
+  if (
+    q.includes('serve pra que') || 
+    q.includes('para que serve') || 
+    q.includes('pra que serve') || 
+    q.includes('ajuda em que') || 
+    q.includes('o que faz') || 
+    q.includes('o que e esse app') || 
+    q.includes('o que e o app') || 
+    q.includes('ajudar o motorista') || 
+    q.includes('utilidade') || 
+    q.includes('funciona como') || 
+    q.includes('por que usar') ||
+    q.includes('como ajuda')
+  ) {
+    return `🚗 **O Motor IA é o seu parceiro digital de trabalho para lucrar mais e não ficar na mão!**\n\n` +
+           `Ele foi criado especialmente para você que roda em aplicativo (Uber, 99, iFood, Rappi, InDrive, entregas) para cuidar do seu instrumento de trabalho: **seu veículo (carro ou moto) e o dinheiro do seu bolso.**\n\n` +
+           `---\n\n` +
+           `### 💡 **Como o Motor IA ajuda você no dia a dia:**\n\n` +
+           `1. 💰 **Lucro Líquido Real (Dinheiro de Verdade):**\n` +
+           `   • O app desconta seus custos de combustível, alimentação e taxas do faturamento bruto da Uber/99.\n` +
+           `   • Você descobre na hora quanto REALMENTE sobrou no seu bolso sem se enganar!\n\n` +
+           `2. 🛠️ **Garagem Preventiva (Evita Quebrar na Rua):**\n` +
+           `   • Acompanha seu odômetro (**${currentKm.toLocaleString('pt-BR')} KM**) e te avisa ANTES de vencerem o **óleo, filtros, pneus, freios ou corrente da moto**.\n` +
+           `   • Evita prejuízos gigantes de motor fundido ou ficar parado na pista esperando guincho.\n\n` +
+           `3. 💵 **Reserva Financeira por KM (Caixinha de Peças):**\n` +
+           `   • Calcula exatamente quanto guardar por KM rodado (ex: R$ 0,20/km para carro; R$ 0,10/km para moto) para pagar revisões sem sufoco no cartão.\n\n` +
+           `4. 🚨 **Socorro & Consultoria Mecânica na Rua:**\n` +
+           `   • Se o motor esquentar, sair fumaça, o carro falhar ou acender luz no painel, a IA te orienta na hora sobre o que fazer com segurança.\n\n` +
+           `5. 📊 **Relatórios em Excel e PDF:**\n` +
+           `   • Exporte planilhas completas dos seus ganhos e custos para ter controle financeiro total.\n\n` +
+           `---\n\n` +
+           `👉 **Por onde começar:**\n` +
+           `• **Aba Finanças:** Lance seus ganhos e abastecimentos do dia.\n` +
+           `• **Aba Garagem:** Atualize a quilometragem do seu odômetro.\n` +
+           `• **Aba Motor IA:** Tire qualquer dúvida sobre manutenção ou finanças!`;
+  }
+
   // Busca na base de FAQ
   const matchingFaq = searchFAQ(userQuery);
   if (matchingFaq.length > 0) {
@@ -56,17 +94,6 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
            `2. **Ligue o pisca-alerta** e coloque o triângulo.\n` +
            `3. **NUNCA abra o reservatório ou radiador quente** (risco de queimadura por água pressurizada).\n` +
            `4. Se for a **luz vermelha do óleo**, não dê partida sob hipótese alguma. Mande guinchar para a oficina!`;
-  }
-
-  // Suporte do App / O que faz
-  if (q.includes('ajuda em que') || q.includes('pra que serve') || q.includes('o que faz') || q.includes('funciona') || q.includes('utilidade') || q.includes('como usar')) {
-    return `🚗 **O Motor IA é o seu assistente financeiro e mecânico completo!**\n\n` +
-           `Ele ajuda você em 4 pilares principais:\n\n` +
-           `1. **Lucro Líquido Real:** Mostra exatamente quanto sobrou no bolso descontando combustível, alimentação e taxas.\n` +
-           `2. **Garagem & Peças:** Acompanha a quilometragem do seu veículo (**${currentKm.toLocaleString('pt-BR')} KM**) e te avisa ANTES do óleo, pneus e freios vencerem.\n` +
-           `3. **Consultoria & Central de FAQ:** Responde suas dúvidas sobre manutenção de carro/moto, economia de combustível e suporte ao app.\n` +
-           `4. **Relatórios Excel & PDF:** Permite exportar todos os seus dados em planilhas completas na aba **Relatórios**.\n\n` +
-           `💡 Cadastre seus ganhos e abastecimentos na aba **Finanças** para ver seus números em tempo real!`;
   }
 
   // Saudações
@@ -107,5 +134,5 @@ function processLocalAI({ userQuery, transactions, currentKm, maintenances }) {
          `• Lucro Líquido Hoje: **R$ ${todayNet.toFixed(2)}**\n` +
          `• Odômetro: **${currentKm.toLocaleString('pt-BR')} KM**\n` +
          (overdueParts.length > 0 ? `• 🚨 **${overdueParts.length} peça(s) vencida(s)** na Garagem.\n\n` : `• ✅ Manutenções em dia.\n\n`) +
-         `Pode me perguntar sobre seu faturamento, manutenção de carro ou moto, suporte do aplicativo ou emergências!`;
+         `Pode me perguntar para que serve o app, sobre seu faturamento, manutenção de carro ou moto ou emergências!`;
 }
