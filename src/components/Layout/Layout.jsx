@@ -1,6 +1,6 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
-import { RotateCcw, Car, Bike, Settings, Clock, Crown } from 'lucide-react';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { RotateCcw, Car, Bike, Settings, Clock, Crown, LogOut } from 'lucide-react';
 import BottomNav from './BottomNav';
 import VehicleModal from '../Onboarding/VehicleModal';
 import { useUser } from '../../context/UserContext';
@@ -8,16 +8,24 @@ import { useSubscription } from '../../hooks/useSubscription';
 import './Layout.css';
 
 const Layout = () => {
-  const { user, vehicleProfile, setShowVehicleModal } = useUser();
+  const { user, vehicleProfile, setShowVehicleModal, logout } = useUser();
   const { status, daysLeft } = useSubscription(user?.id);
+  const navigate = useNavigate();
 
   const handleResetData = () => {
-    const confirmMessage = "⚠️ ATENÇÃO: Esta ação apagará os dados locais salvos. Deseja redefinir os lançamentos?";
-    
+    const confirmMessage = "⚠️ ATENÇÃO: Esta ação apagará os dados do veículo salvos neste navegador (não afeta seus lançamentos financeiros, que ficam salvos na sua conta). Deseja continuar?";
+
     if (window.confirm(confirmMessage)) {
       localStorage.clear();
-      alert("✅ Aplicativo redefinido com sucesso!");
+      alert("✅ Dados locais redefinidos com sucesso!");
       window.location.reload();
+    }
+  };
+
+  const handleLogout = async () => {
+    if (window.confirm("Deseja realmente sair da sua conta?")) {
+      await logout();
+      navigate('/auth');
     }
   };
 
@@ -54,22 +62,31 @@ const Layout = () => {
 
           <button
             className="reset-btn"
-            title="Apaga todos os dados salvos neste navegador (finanças, garagem, veículo)"
+            title="Apaga os dados locais do veículo salvos neste navegador"
             onClick={handleResetData}
           >
             <RotateCcw size={16} />
             <span>Zerar dados</span>
+          </button>
+
+          <button
+            className="logout-btn"
+            title="Sair da sua conta"
+            onClick={handleLogout}
+          >
+            <LogOut size={16} />
+            <span>Sair</span>
           </button>
         </div>
       </header>
 
       {/* Modal Global de Cadastro/Edição de Veículo */}
       <VehicleModal />
-      
+
       <main className="page-content animate-slide-up">
         <Outlet />
       </main>
-      
+
       <BottomNav />
     </div>
   );

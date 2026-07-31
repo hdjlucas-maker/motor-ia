@@ -4,6 +4,9 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+// Modelo do Cloudflare Workers AI usado pela Motor IA (grátis dentro da cota diária de Neurons).
+const TEXT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+
 export async function onRequestOptions() {
   return new Response(null, { status: 200, headers: CORS_HEADERS });
 }
@@ -21,24 +24,39 @@ export async function onRequestPost(context) {
       });
     }
 
-    const rawApiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.AI_API_KEY || '';
-    const apiKey = rawApiKey.trim();
-
     const qLower = userQuery.toLowerCase();
     if (qLower.includes('status da ia') || qLower.includes('status da api') || qLower.includes('teste de chave')) {
-      const hasKey = Boolean(apiKey && apiKey.length > 5);
-      const keyPrefix = hasKey ? apiKey.substring(0, 4) + '...' : 'Nenhuma';
-      return jsonResponse({
-        reply: hasKey
-          ? `🟢 **Servidor Cloudflare Conectado com Sucesso!**\n\n` +
-            `• Variável de Ambiente: **GEMINI_API_KEY ativa no Cloudflare Pages**\n` +
-            `• Prefixo da Chave: **${keyPrefix}**\n` +
-            `• Modelo Alvo: Google Gemini\n` +
-            `• Status: A function lê sua chave e responde dinamicamente.`
-          : `🔴 **Variável GEMINI_API_KEY não encontrada no Cloudflare!**\n\n` +
-            `• A function ainda não recebeu a variável de ambiente.\n` +
-            `• **Como resolver:** Vá em Cloudflare Pages -> Settings -> Environment Variables, adicione GEMINI_API_KEY e faça um **Redeploy** na aba Deployments.`
-      });
+      if (!env.AI) {
+        return jsonResponse({
+          reply: `🔴 **Binding do Workers AI não encontrado!**\n\n` +
+            `• A function não tem acesso ao "AI".\n` +
+            `• **Como resolver:** confira se o \`wrangler.jsonc\` tem o bloco \`"ai": { "binding": "AI" }\` e faça o deploy de novo.`
+        });
+      }
+
+      // Faz uma chamada real e pequena, pra confirmar que o binding realmente responde
+      // (só existir o binding não garante que a chamada funciona).
+      try {
+        const testResult = await env.AI.run(TEXT_MODEL, {
+          messages: [{ role: 'user', content: 'responda apenas "ok"' }]
+        });
+
+        return jsonResponse({
+          reply: `🟢 **Conectado ao Cloudflare Workers AI com sucesso!**\n\n` +
+            `• Binding: **AI ativo**\n` +
+            `• Modelo: **${TEXT_MODEL}**\n` +
+            `• Teste de chamada real: **passou**\n` +
+            `• Resposta do teste: ${(testResult.response || '').slice(0, 100)}\n` +
+            `• Status: A IA está respondendo de forma dinâmica.`
+        });
+      } catch (testErr) {
+        return jsonResponse({
+          reply: `🟡 **Binding encontrado, mas a chamada de teste falhou.**\n\n` +
+            `• Modelo: **${TEXT_MODEL}**\n` +
+            `• Erro: ${testErr.message}\n\n` +
+            `• Isso costuma acontecer quando o nome do modelo mudou ou a cota diária (10 mil Neurons grátis/dia) acabou.`
+        });
+      }
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
@@ -59,7 +77,7 @@ export async function onRequestPost(context) {
     const vYear = vehicleProfile?.year || '';
     const vFuel = vehicleProfile?.fuelType || '';
 
-    if (apiKey && apiKey.length > 5) {
+    if (env.AI) {
       try {
         const systemPrompt = `
 Você é a Motor IA, a mais completa e inteligente assistente consultora financeira, operacional e mecânica para motoristas de carros e entregadores de motos de aplicativo (Uber, 99, Indrive, iFood, Rappi, Zé Delivery).
@@ -120,38 +138,20 @@ TELEMETRIA ATUAL DO MOTORISTA:
 - Peças Próximas de Trocar: ${urgent.map(p => p.name).join(', ') || 'Nenhuma'}
         `;
 
-        const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+        const aiResult = await env.AI.run(TEXT_MODEL, {
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userQuery }
+          ]
+        });
 
-        for (const model of models) {
-          try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-            const apiResponse = await fetch(url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey
-              },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: systemPrompt + `\n\nPERGUNTA DO MOTORISTA/USUÁRIO: "${userQuery}"` }] }]
-              })
-            });
-
-            if (apiResponse.ok) {
-              const data = await apiResponse.json();
-              const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (reply && reply.trim()) {
-                return jsonResponse({ reply: reply.trim() });
-              }
-            } else {
-              const errorText = await apiResponse.text();
-              console.warn(`Modelo ${model} respondeu status ${apiResponse.status}:`, errorText);
-            }
-          } catch (modelErr) {
-            console.warn(`Tentativa com modelo ${model} falhou:`, modelErr);
-          }
+        const reply = aiResult?.response;
+        if (reply && reply.trim()) {
+          return jsonResponse({ reply: reply.trim() });
         }
-      } catch (geminiErr) {
-        console.warn('Erro na chamada Gemini API no Cloudflare:', geminiErr);
+        console.warn('Workers AI respondeu sem texto utilizável:', aiResult);
+      } catch (aiErr) {
+        console.warn('Erro na chamada Workers AI:', aiErr);
       }
     }
 
@@ -324,7 +324,7 @@ function generateServerlessLocalReply({ userQuery, todayNet, todayGross, todayEx
     return `✅ **Sua garagem está 100% em dia!** Odômetro atual: **${currentKm.toLocaleString('pt-BR')} KM**.`;
   }
 
-  if (q.includes('oi') || q.includes('ola') || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite')) {
+  if (/\boi\b/.test(q) || /\bola\b/.test(q) || q.includes('bom dia') || q.includes('boa tarde') || q.includes('boa noite')) {
     return `Olá! Sou a Motor IA, sua consultora pessoal de manutenção (carro e moto) e finanças para motorista.\n\n` +
            `Como posso te ajudar agora? Pode me perguntar para que serve o app, dicas de manutenção, como cuidar do radiador ou quanto você lucrou hoje!`;
   }

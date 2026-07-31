@@ -5,6 +5,16 @@
   "kv_namespaces": [
     { "binding": "SUBSCRIPTIONS", "id": "43bff39aca584401951aa0ba6a31b51b" }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "motor-ia-db",
+      "database_id": "a7e9321f-9c9a-45cd-9073-8e9aa3f7cb00"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  },
   "vars": {
     "INFINITEPAY_HANDLE": "servicoslucas",
     "APP_BASE_URL": "https://motor-ia.pages.dev"

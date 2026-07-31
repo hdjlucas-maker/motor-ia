@@ -23,6 +23,27 @@
   --border-radius-sm: 8px;
   --border-radius-md: 16px;
   --border-radius-lg: 24px;
+
+  /* Largura do conteúdo: cresce por breakpoint em vez de ficar travada no tamanho de celular */
+  --content-max-width: 600px; /* celular (padrão) */
+}
+
+@media (min-width: 768px) {
+  :root {
+    --content-max-width: 760px; /* tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-max-width: 960px; /* notebook/desktop */
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --content-max-width: 1140px; /* telas grandes */
+  }
 }
 
 * {
@@ -94,9 +115,15 @@ body {
 .page-content {
   flex: 1;
   padding: 20px;
-  max-width: 600px; /* Constrain for web view */
+  max-width: var(--content-max-width);
   margin: 0 auto;
   width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .page-content {
+    padding: 32px;
+  }
 }
 
 /* Typography */

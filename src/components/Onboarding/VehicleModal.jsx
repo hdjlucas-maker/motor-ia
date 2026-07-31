@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Bike, Check, X, Shield, Sparkles, Gauge, Fuel } from 'lucide-react';
+import { Car, Bike, Check, X, Sparkles, Gauge } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import './VehicleModal.css';
 
@@ -9,13 +9,14 @@ const MOTO_BRANDS = ['Honda', 'Yamaha', 'Shineray', 'BMW', 'Royal Enfield', 'Kaw
 const VehicleModal = () => {
   const { vehicleProfile, updateVehicleProfile, showVehicleModal, setShowVehicleModal } = useUser();
 
+  // Sem valores de exemplo pré-preenchidos: o motorista cadastra o veículo dele mesmo
   const [type, setType] = useState(vehicleProfile?.type || 'carro');
-  const [brand, setBrand] = useState(vehicleProfile?.brand || 'Chevrolet');
-  const [model, setModel] = useState(vehicleProfile?.model || 'Onix 1.0 Flex');
-  const [year, setYear] = useState(vehicleProfile?.year || '2021');
-  const [currentKm, setCurrentKm] = useState(vehicleProfile?.currentKm || 85000);
-  const [fuelType, setFuelType] = useState(vehicleProfile?.fuelType || 'Flex (Etanol/Gasolina)');
-  const [category, setCategory] = useState(vehicleProfile?.category || 'Uber X / 99Pop');
+  const [brand, setBrand] = useState(vehicleProfile?.brand || '');
+  const [model, setModel] = useState(vehicleProfile?.model || '');
+  const [year, setYear] = useState(vehicleProfile?.year || '');
+  const [currentKm, setCurrentKm] = useState(vehicleProfile?.currentKm || '');
+  const [fuelType, setFuelType] = useState(vehicleProfile?.fuelType || '');
+  const [category, setCategory] = useState(vehicleProfile?.category || '');
 
   if (!showVehicleModal) return null;
 
@@ -58,9 +59,9 @@ const VehicleModal = () => {
                 className={`type-card ${type === 'carro' ? 'active' : ''}`}
                 onClick={() => {
                   setType('carro');
-                  setBrand('Chevrolet');
-                  setModel('Onix 1.0 Flex');
-                  setFuelType('Flex (Etanol/Gasolina)');
+                  setBrand('');
+                  setModel('');
+                  setFuelType('');
                 }}
               >
                 <Car size={32} />
@@ -73,9 +74,9 @@ const VehicleModal = () => {
                 className={`type-card ${type === 'moto' ? 'active' : ''}`}
                 onClick={() => {
                   setType('moto');
-                  setBrand('Honda');
-                  setModel('CG 160 Titan');
-                  setFuelType('Gasolina / Flex');
+                  setBrand('');
+                  setModel('');
+                  setFuelType('');
                 }}
               >
                 <Bike size={32} />
@@ -89,11 +90,13 @@ const VehicleModal = () => {
           <div className="form-row">
             <div className="form-group">
               <label className="input-label">Marca do Veículo:</label>
-              <select 
-                value={brand} 
+              <select
+                value={brand}
                 onChange={(e) => setBrand(e.target.value)}
                 className="select-input"
+                required
               >
+                <option value="" disabled>Selecione a marca</option>
                 {(type === 'carro' ? CAR_BRANDS : MOTO_BRANDS).map(b => (
                   <option key={b} value={b}>{b}</option>
                 ))}
@@ -102,7 +105,7 @@ const VehicleModal = () => {
 
             <div className="form-group">
               <label className="input-label">Modelo & Versão:</label>
-              <input 
+              <input
                 type="text"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
@@ -117,7 +120,7 @@ const VehicleModal = () => {
           <div className="form-row">
             <div className="form-group">
               <label className="input-label">Ano de Fabricação:</label>
-              <input 
+              <input
                 type="text"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
@@ -131,7 +134,7 @@ const VehicleModal = () => {
               <label className="input-label">Odômetro Atual (KM):</label>
               <div className="input-icon-wrapper">
                 <Gauge size={18} className="input-icon" />
-                <input 
+                <input
                   type="number"
                   value={currentKm}
                   onChange={(e) => setCurrentKm(e.target.value)}
@@ -147,11 +150,13 @@ const VehicleModal = () => {
           <div className="form-row">
             <div className="form-group">
               <label className="input-label">Combustível Principal:</label>
-              <select 
-                value={fuelType} 
+              <select
+                value={fuelType}
                 onChange={(e) => setFuelType(e.target.value)}
                 className="select-input"
+                required
               >
+                <option value="" disabled>Selecione o combustível</option>
                 <option value="Flex (Etanol/Gasolina)">Flex (Etanol/Gasolina)</option>
                 <option value="Gasolina">Gasolina</option>
                 <option value="GNV + Gasolina">GNV + Gasolina</option>
@@ -162,11 +167,13 @@ const VehicleModal = () => {
 
             <div className="form-group">
               <label className="input-label">Categoria de Trabalho:</label>
-              <select 
-                value={category} 
+              <select
+                value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="select-input"
+                required
               >
+                <option value="" disabled>Selecione a categoria</option>
                 <option value="Uber X / 99Pop">Uber X / 99Pop</option>
                 <option value="Uber Comfort / Black">Uber Comfort / Black</option>
                 <option value="Entregas iFood / Rappi / Zé">Entregas iFood / Rappi / Zé</option>

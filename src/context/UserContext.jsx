@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { registrar, entrar, sair, buscarUsuarioLogado } from '../services/api';
 
 const UserContext = createContext();
 
@@ -6,45 +7,41 @@ export const useUser = () => useContext(UserContext);
 
 const DEFAULT_VEHICLE = {
   type: 'carro', // 'carro' ou 'moto'
-  brand: 'Chevrolet',
-  model: 'Onix 1.0 Flex',
-  year: '2021',
-  currentKm: 85000,
-  fuelType: 'Flex (Etanol/Gasolina)',
-  category: 'Uber X / 99Pop'
-};
-
-const DEFAULT_USER = {
-  id: 'google-user-123',
-  name: 'Motorista Parceiro',
-  email: 'motorista@gmail.com',
-  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-  isAuthenticated: true
+  brand: '',
+  model: '',
+  year: '',
+  currentKm: 0,
+  fuelType: '',
+  category: ''
 };
 
 export const UserProvider = ({ children }) => {
-  // Estado do Usuário Autenticado via Google
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('motorIA_user');
-    return saved ? JSON.parse(saved) : DEFAULT_USER;
-  });
+  // Usuário autenticado de verdade (sessão no banco D1, cookie httpOnly)
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [authError, setAuthError] = useState('');
 
-  // Perfil do Veículo (Carro ou Moto, Ano, Modelo, Odômetro)
+  // Perfil do veículo continua local por enquanto (próximo passo: migrar pra tabela `vehicles`)
   const [vehicleProfile, setVehicleProfile] = useState(() => {
     const saved = localStorage.getItem('motorIA_vehicle');
     return saved ? JSON.parse(saved) : DEFAULT_VEHICLE;
   });
 
-  // Modal de Cadastro/Edição de Veículo
   const [showVehicleModal, setShowVehicleModal] = useState(false);
 
+  // Ao abrir o app, verifica se já existe uma sessão válida (cookie httpOnly)
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('motorIA_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('motorIA_user');
-    }
-  }, [user]);
+    (async () => {
+      try {
+        const loggedUser = await buscarUsuarioLogado();
+        setUser(loggedUser);
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (vehicleProfile) {
@@ -53,21 +50,37 @@ export const UserProvider = ({ children }) => {
     }
   }, [vehicleProfile]);
 
-  const loginWithGoogle = (googleUserData = null) => {
-    const userData = googleUserData || {
-      id: `google-user-${Date.now()}`,
-      name: 'Lucas Motorista',
-      email: 'hdjlucas@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-      isAuthenticated: true
-    };
-    setUser(userData);
-    setShowVehicleModal(true); // Abre modal de veículo se necessário
+  const criarConta = async (name, email, password) => {
+    setAuthError('');
+    try {
+      const newUser = await registrar(name, email, password);
+      setUser(newUser);
+      setShowVehicleModal(true);
+      return true;
+    } catch (err) {
+      setAuthError(err.message);
+      return false;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('motorIA_user');
+  const login = async (email, password) => {
+    setAuthError('');
+    try {
+      const loggedUser = await entrar(email, password);
+      setUser(loggedUser);
+      return true;
+    } catch (err) {
+      setAuthError(err.message);
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await sair();
+    } finally {
+      setUser(null);
+    }
   };
 
   const updateVehicleProfile = (newProfile) => {
@@ -89,10 +102,13 @@ export const UserProvider = ({ children }) => {
   return (
     <UserContext.Provider value={{
       user,
+      loadingUser,
+      authError,
       vehicleProfile,
       showVehicleModal,
       setShowVehicleModal,
-      loginWithGoogle,
+      criarConta,
+      login,
       logout,
       updateVehicleProfile,
       updateKm

@@ -7,6 +7,7 @@ import AI from './pages/AI/AI';
 import Reports from './pages/Reports/Reports';
 import Auth from './pages/Auth/Auth';
 import Subscription from './pages/Subscription/Subscription';
+import RequireAuth from './components/Auth/RequireAuth';
 import RequireSubscription from './components/Auth/RequireSubscription';
 
 function App() {
@@ -14,18 +15,18 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/auth" element={<Auth />} />
-        
+
         {/* Protected Routes (Wrapper in Layout) */}
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
           <Route index element={<RequireSubscription><Dashboard /></RequireSubscription>} />
           <Route path="garage" element={<RequireSubscription><Garage /></RequireSubscription>} />
           <Route path="financial" element={<RequireSubscription><Financial /></RequireSubscription>} />
           <Route path="ai" element={<RequireSubscription><AI /></RequireSubscription>} />
           <Route path="reports" element={<RequireSubscription><Reports /></RequireSubscription>} />
-          {/* Não é protegida pelo guard: precisa estar acessível mesmo com o teste expirado */}
+          {/* Não é protegida pelo guard de assinatura: precisa estar acessível mesmo com o teste expirado */}
           <Route path="subscription" element={<Subscription />} />
         </Route>
-        
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
