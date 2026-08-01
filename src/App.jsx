@@ -6,6 +6,7 @@ import Financial from './pages/Financial/Financial';
 import AI from './pages/AI/AI';
 import Reports from './pages/Reports/Reports';
 import Auth from './pages/Auth/Auth';
+import Privacy from './pages/Privacy/Privacy';
 import Subscription from './pages/Subscription/Subscription';
 import RequireAuth from './components/Auth/RequireAuth';
 import RequireSubscription from './components/Auth/RequireSubscription';
@@ -15,6 +16,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/auth" element={<Auth />} />
+        <Route path="/privacidade" element={<Privacy />} />
 
         {/* Protected Routes (Wrapper in Layout) */}
         <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Bot, Shield, CheckCircle } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
 import './Auth.css';
@@ -125,6 +125,10 @@ const Auth = () => {
           <Shield size={14} />
           <span>Seus dados ficam salvos com segurança, vinculados à sua conta.</span>
         </div>
+
+        <Link to="/privacidade" className="auth-privacy-link">
+          Como usamos seus dados (LGPD)
+        </Link>
       </div>
     </div>
   );
