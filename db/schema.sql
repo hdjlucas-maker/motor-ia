@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
+  cpf_hash TEXT UNIQUE,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

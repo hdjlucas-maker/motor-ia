@@ -12,13 +12,22 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [cpf, setCpf] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const formatCpf = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     const ok = mode === 'criar'
-      ? await criarConta(name, email, password)
+      ? await criarConta(name, email, password, cpf)
       : await login(email, password);
     setSubmitting(false);
     if (ok) navigate('/');
@@ -69,13 +78,25 @@ const Auth = () => {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {mode === 'criar' && (
-            <input
-              type="text"
-              placeholder="Seu nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            <>
+              <input
+                type="text"
+                placeholder="Seu nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="CPF (só números)"
+                value={cpf}
+                onChange={(e) => setCpf(formatCpf(e.target.value))}
+                maxLength={14}
+                required
+              />
+              <p className="auth-hint">Usamos o CPF só pra garantir que cada pessoa tenha direito a um período de teste — não compartilhamos com ninguém.</p>
+            </>
           )}
           <input
             type="email"

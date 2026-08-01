@@ -50,10 +50,10 @@ export const UserProvider = ({ children }) => {
     }
   }, [vehicleProfile]);
 
-  const criarConta = async (name, email, password) => {
+  const criarConta = async (name, email, password, cpf) => {
     setAuthError('');
     try {
-      const newUser = await registrar(name, email, password);
+      const newUser = await registrar(name, email, password, cpf);
       setUser(newUser);
       setShowVehicleModal(true);
       return true;

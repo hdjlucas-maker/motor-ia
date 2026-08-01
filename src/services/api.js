@@ -13,10 +13,10 @@ async function request(path, options = {}) {
   return data;
 }
 
-export function registrar(name, email, password) {
+export function registrar(name, email, password, cpf) {
   return request("/api/auth-register", {
     method: "POST",
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, cpf }),
   });
 }
 
