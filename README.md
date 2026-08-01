@@ -2,6 +2,8 @@
 
 Consultoria por IA de manutenção preventiva e finanças para motoristas e entregadores de aplicativo (Uber, 99, InDrive, iFood, Rappi, Zé Delivery).
 
+https://motor-ia.pages.dev/auth
+
 O Motor IA ajuda quem vive de carro ou moto a:
 - Saber o **lucro líquido real** do dia (ganhos menos combustível, comida, taxas)
 - Ter alertas de **manutenção preventiva** (óleo, pneus, freios, corrente, filtros) antes de quebrar na rua
@@ -88,7 +90,9 @@ npx wrangler pages deploy dist
 - Todo novo usuário começa com **7 dias de teste grátis**, controlado via KV (`sub:{userId}`)
 - Ao expirar, o acesso às telas do app é bloqueado e o usuário é redirecionado para `/subscription`
 - Os planos (mensal e anual) são criados dinamicamente via API da InfinitePay a cada clique — não há nada fixo configurado no painel deles
-- O webhook de pagamento reconfirma a transação diretamente com a API da InfinitePay antes de liberar o acesso, como camada extra de segurança
+- O webhook de pagamento reconfirma a transação diretamente com a API da InfinitePay antes de liberar o acesso, como camada extra de segurança.
+
+https://motor-ia.pages.dev/auth
 
 ---
 
